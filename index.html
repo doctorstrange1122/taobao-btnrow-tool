@@ -153,9 +153,10 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
         <div class="row"><span class="lb">主文字距</span><input type="range" data-k="btnSpacing" min="-5" max="30" step="1"><span class="val" data-v="btnSpacing"></span><span class="hint" style="width:auto">px</span></div>
         <div class="row"><span class="lb">副标字号</span><input type="range" data-k="fs2" min="12" max="64" step="2"><span class="val" data-v="fs2"></span></div>
         <div class="row"><span class="lb">副标字距</span><input type="range" data-k="btnSpacing2" min="-5" max="30" step="1"><span class="val" data-v="btnSpacing2"></span><span class="hint" style="width:auto">px</span></div>
+        <div class="row"><span class="lb">主副间距</span><input type="range" data-k="textGap" min="-40" max="100" step="2"><span class="val" data-v="textGap"></span><span class="hint" id="gapRead" style="width:auto">两行基线距 ≈ 48px</span></div>
         <div class="row"><span class="lb">主文字色</span><input type="color" data-k="tc"><div class="seg" id="segTC"></div></div>
         <div class="row"><span class="lb">副标颜色</span><input type="color" data-k="tsub"><div class="seg" id="segTSub"></div></div>
-        <p class="hint">按钮副标（<code>|</code> 后面的小字）颜色也能自定义，不再固定灰色。<b>主文字与副标的字号、颜色、字间距各自独立</b>；字间距可填负值收紧，范围 −5~30px。字距过大使文字超出按钮宽度时会自动压窄，此时同步调小字号即可。</p>
+        <p class="hint">按钮副标（<code>|</code> 后面的小字）颜色也能自定义，不再固定灰色。<b>主文字与副标的字号、颜色、字间距各自独立</b>；字间距可填负值收紧，范围 −5~30px。字距过大使文字超出按钮宽度时会自动压窄，此时同步调小字号即可。<b>「主副间距」</b>调的是主文案与副标两行之间的上下距离：正值拉开、负值收紧，以两行中间为轴向上下均分，不改变原有居中布局，只对带副标的按钮生效；右侧实时显示两行基线距。间距过大可能超出按钮，请配合按钮高度调整。</p>
       </div></div>
 
       <div class="card" data-sec="5"><h3>5 · 按钮自定义图（按每行个数自动缩放）</h3><div class="cbody">
@@ -318,7 +319,7 @@ var D={
  titleSpacing:2,titleAlign:'center',titleGap:30,
  subText:'① 每个入口只有 1 次机会　② 入口不显示肥料数量是正常的\n③ 部分号可能不到账，下完去看肥料明细',
  subPos:'bottom',subSize:28,subColor:'#8A2A22',subAlign:'center',subGap:22,
- showText:true,fs:46,fs2:26,btnSpacing:0,btnSpacing2:0,tc:'#C8161D',tsub:'#8A857C',
+ showText:true,fs:46,fs2:26,btnSpacing:0,btnSpacing2:0,textGap:0,tc:'#C8161D',tsub:'#8A857C',
  imgMode:'none',imgFit:'cover',imgScale:100,imgOpacity:100,imgKeepBg:true,
  pal:'sand',mode:'fill',bg:'transparent',bgCustom:'#FFF3F5',bgCustom2:'#FFE0E6',bgDir:'v',bgOpacity:100,
  customFill:'#DDE8F0',strokeColor:'#C9A0A8',strokeCustom:false,stroke:6,
@@ -484,15 +485,16 @@ function drawButtons(ctx,g,ls,fillC,mode){
     // 文字
     if(D.showText){
       var L=ls[i]||{main:'',sub:''},cx=q.x+q.w/2,cy=q.y+q.h/2,hasSub=!!L.sub;
+      var tgap=(Number(D.textGap)||0)/2;
       ctx.save();
       ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.font='700 '+D.fs+'px '+FONTS.hei;ctx.fillStyle=D.tc;
       try{if('letterSpacing' in ctx)ctx.letterSpacing=(Number(D.btnSpacing)||0)+'px';}catch(e){}
-      ctx.fillText(L.main,cx,cy-(hasSub?D.fs*0.32:0),q.w-20);
+      ctx.fillText(L.main,cx,cy-(hasSub?D.fs*0.32+tgap:0),q.w-20);
       if(hasSub){
         ctx.font=D.fs2+'px '+FONTS.hei;ctx.fillStyle=D.tsub;
         try{if('letterSpacing' in ctx)ctx.letterSpacing=(Number(D.btnSpacing2)||0)+'px';}catch(e){}
-        ctx.fillText(L.sub,cx,cy+D.fs*0.72,q.w-20);
+        ctx.fillText(L.sub,cx,cy+D.fs*0.72+tgap,q.w-20);
       }
       ctx.restore();
     }
@@ -561,7 +563,7 @@ function coordText(){
   out.push('按钮配色：'+pal().n+' / 版本：'+D.mode+' / 底色：'+D.bg+(D.bg==='custom'||D.bg==='gradient'?'（'+D.bgCustom+'）':''));
   out.push('外框：'+FRAME_NAMES[D.frame]+' / '+D.frameW+'px / '+D.frameColor);
   out.push('文字颜色：主 '+D.tc+'，按钮副标 '+D.tsub+'，标题 '+D.titleColor+'，说明 '+D.subColor);
-  out.push('按钮文字：主 '+D.fs+'px／字距 '+(Number(D.btnSpacing)||0)+'px，副标 '+D.fs2+'px／字距 '+(Number(D.btnSpacing2)||0)+'px');
+  out.push('按钮文字：主 '+D.fs+'px／字距 '+(Number(D.btnSpacing)||0)+'px，副标 '+D.fs2+'px／字距 '+(Number(D.btnSpacing2)||0)+'px，主副间距 '+(Number(D.textGap)||0)+'px（两行基线距 '+Math.round(D.fs*1.04+(Number(D.textGap)||0))+'px）');
   out.push('按钮自定义图：'+(D.imgMode==='none'?'无':(D.imgMode==='single'?'统一图':'逐格图'))+' / '+D.imgFit);
   out.push('');
   out.push('序号\t文案\tx\ty\tw\th\t百分比(left,top,width,height)');
@@ -586,6 +588,8 @@ function syncUI(){
   });
   document.querySelectorAll('[data-v]').forEach(function(el){var k=el.dataset.v;if(k in D)el.textContent=D[k];});
   document.getElementById('zoomV').textContent=document.getElementById('zoom').value+'%';
+  var gr=document.getElementById('gapRead');
+  if(gr)gr.textContent='两行基线距 ≈ '+Math.round(D.fs*1.04+(Number(D.textGap)||0))+'px';
   var n=(IMG.single?1:0)+IMG.per.length;
   document.getElementById('imgInfo').textContent=n?('已载入：统一图 '+(IMG.single?'1':'0')+' 张 / 逐格图 '+IMG.per.length+' 张'):'尚未上传图片';
 }
@@ -860,7 +864,7 @@ function renderRecords(){
 async function loadRec(id,quiet){
   var rec=findRec(id);if(!rec)return;
   var p=rec.params||{};for(var k in D)if(p[k]!==undefined)D[k]=p[k];
-  if(p.btnSpacing===undefined)D.btnSpacing=0;if(p.btnSpacing2===undefined)D.btnSpacing2=0;
+  if(p.btnSpacing===undefined)D.btnSpacing=0;if(p.btnSpacing2===undefined)D.btnSpacing2=0;if(p.textGap===undefined)D.textGap=0;
   document.getElementById('labels').value=rec.labels||'';
   await restoreImgs(rec.images);
   curRecId=id;recDirty=false;
@@ -930,7 +934,7 @@ function projectData(name){
 function applyProject(o,alsoRecord){
   if(!o||!o.params)throw new Error('不是有效的工程文件');
   for(var k in D)if(o.params[k]!==undefined)D[k]=o.params[k];
-  if(o.params.btnSpacing===undefined)D.btnSpacing=0;if(o.params.btnSpacing2===undefined)D.btnSpacing2=0;
+  if(o.params.btnSpacing===undefined)D.btnSpacing=0;if(o.params.btnSpacing2===undefined)D.btnSpacing2=0;if(o.params.textGap===undefined)D.textGap=0;
   document.getElementById('labels').value=o.labels||'';
   return restoreImgs(o.images).then(function(){
     save();render();
@@ -1017,9 +1021,9 @@ function svgString(ls){
     if((D.mode==='outline'||D.mode==='both')&&D.stroke>0)
       S.push('<rect x="'+n(q.x)+'" y="'+n(q.y)+'" width="'+n(q.w)+'" height="'+n(q.h)+'" rx="'+rx+'" fill="none" stroke="'+lineColor()+'" stroke-width="'+D.stroke+'"/>');
     if(D.showText){
-      var L=ls[i]||{main:'',sub:''},cx=q.x+q.w/2,cy=q.y+q.h/2,hs=!!L.sub;
-      S.push(textEl(L.main,cx,cy-(hs?D.fs*0.32:0),D.fs,D.tc,'','btn-main',bodyFont,700,'middle',(Number(D.btnSpacing)||0)));
-      if(hs)S.push(textEl(L.sub,cx,cy+D.fs*0.72,D.fs2,D.tsub,'','btn-sub',bodyFont,400,'middle',(Number(D.btnSpacing2)||0)));
+      var L=ls[i]||{main:'',sub:''},cx=q.x+q.w/2,cy=q.y+q.h/2,hs=!!L.sub,tgap=(Number(D.textGap)||0)/2;
+      S.push(textEl(L.main,cx,cy-(hs?D.fs*0.32+tgap:0),D.fs,D.tc,'','btn-main',bodyFont,700,'middle',(Number(D.btnSpacing)||0)));
+      if(hs)S.push(textEl(L.sub,cx,cy+D.fs*0.72+tgap,D.fs2,D.tsub,'','btn-sub',bodyFont,400,'middle',(Number(D.btnSpacing2)||0)));
     }
   });
   if(D.frame!=='none'){
