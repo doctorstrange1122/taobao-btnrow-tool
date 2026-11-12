@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>图片宽度一键转 1440 · 淘宝 PC 装修</title>
+<style>
+:root{--bg:#F5F3EF;--card:#FFFFFF;--line:#E6E2DA;--txt:#2B2B2B;--mute:#8A857C;--red:#C8161D;--ok:#167A4A;--warn:#B4690E}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:24px}
+.wrap{max-width:960px;margin:0 auto}
+h1{font-size:24px;margin:0 0 6px}
+.sub{color:var(--mute);margin:0 0 18px}
+.notice{background:#FFF4F4;border:1px solid #F0C9C9;border-left:4px solid var(--red);border-radius:8px;padding:14px 16px;margin-bottom:16px}
+.notice b{color:var(--red)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+#drop{border:2px dashed #D8CFC4;border-radius:10px;padding:26px;text-align:center;color:var(--mute);background:#FCFAF7;transition:.15s}
+#drop.over{border-color:var(--red);background:#FFF6F6}
+#drop b{color:var(--txt)}
+label.file{display:inline-block;background:var(--red);color:#fff;border-radius:6px;padding:6px 16px;cursor:pointer;margin-left:6px}
+label.file input{display:none}
+.row{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+select,button{font:inherit;border-radius:6px;border:1px solid var(--line);padding:7px 14px;background:#fff;color:var(--txt);cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.r{background:var(--red);color:#fff;border-color:var(--red)}
+.hint{color:var(--mute);font-size:13px}
+.bar{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap}
+#cnt{color:var(--mute);font-size:13px}
+.item{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.item.bad{border-color:#E8C48A;background:#FFFBF3}
+.item img{width:150px;height:auto;max-height:90px;object-fit:contain;background:#F2F0EC;border-radius:6px;border:1px solid var(--line)}
+.info{flex:1;min-width:180px}
+.fn{font-weight:600;word-break:break-all}
+.dim{color:var(--mute);margin-top:2px}
+.dim b{color:var(--ok)}
+.note{font-size:13px;color:var(--ok);margin-top:2px}
+.item.bad .note{color:var(--warn)}
+.empty{color:var(--mute);text-align:center;padding:24px}
+.tips{color:var(--mute);font-size:13px;margin-top:14px}
+.tips li{margin:4px 0}
+code{background:#F0EDE8;padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>图片宽度一键转 1440</h1>
+  <p class="sub">把已做好的图等比缩放成淘宝 PC 端要求的固定宽度，不用重新排版。</p>
+
+  <div class="notice">
+    后台要求：<b>固定宽度 1440</b>；最小高度 144；最大高度 2400；文件 ≤10MB。<br>
+    你图片空间里那 7 张是 <b>3000 宽</b>，所以提示「所选图片中含不符合比例要求的图片，请先进行裁剪」——
+    <b>问题在宽度，不在高度</b>（216~1339 都在 144~2400 内）。<br>
+    建议用本工具<b>等比缩放</b>到 1440，而不是点后台的「裁剪」：裁剪会把左右两侧内容切掉。
+  </div>
+
+  <div class="card">
+    <div id="drop">把图片拖到这里，或 <label class="file">选择图片（可多选）<input type="file" id="files" accept="image/*" multiple></label>
+      <div style="margin-top:8px;font-size:13px">支持 PNG / JPG / WEBP，一次可处理多张</div></div>
+    <div class="row">
+      <span>补白方式</span>
+      <select id="bgMode">
+        <option value="white">白底（推荐，避免透明区域变黑）</option>
+        <option value="transparent">保持透明（PNG）</option>
+      </select>
+      <span class="hint">缩放后高度不足 144 时自动补到 144，图片内容上下居中、不变形</span>
+    </div>
+    <div class="bar">
+      <button class="r" id="zipBtn" disabled>打包下载 ZIP</button>
+      <button id="clearBtn">清空</button>
+      <span id="cnt"></span>
+    </div>
+    <ul class="tips">
+      <li>输出宽度恒为 <code>1440</code>，高度按原图比例计算；例如 3000×783 → 1440×376，3000×216 → 1440×144（不足 144 自动补白）。</li>
+      <li>若缩放后高度仍超过 2400，会标黄提示：需回拼版工具减少行数或调小按钮高度，本工具不会裁掉内容。</li>
+      <li>输出统一为 PNG；改「补白方式」会按新设置重新处理已载入的图片。</li>
+      <li>用拼版工具新导出时，请直接选「1440 PC」，导出后不要再放大成 3000 宽。</li>
+    </ul>
+  </div>
+
+  <div id="list"><p class="empty">还没有图片</p></div>
+</div>
+
+<script>
+/* ---------- 基础工具 ---------- */
+var BG='white',ITEMS=[];
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function baseName(n){return String(n).replace(/\.[^.]+$/,'');}
+function dl(blob,name){var a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(u);a.remove();},1500);}
+var CRC=(function(){var t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(u8){var c=0xFFFFFFFF;for(var i=0;i<u8.length;i++)c=CRC[(c^u8[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zip(files){
+  var parts=[],central=[],off=0,enc=new TextEncoder();
+  function u16(v){return [v&255,(v>>8)&255];}
+  function u32(v){return [v&255,(v>>8)&255,(v>>16)&255,(v>>24)&255];}
+  files.forEach(function(f){
+    var name=enc.encode(f.name),data=f.data,c=crc32(data),t=new Date();
+    var dosT=((t.getHours()<<11)|(t.getMinutes()<<5)|(t.getSeconds()>>1))&0xFFFF;
+    var dosD=(((t.getFullYear()-1980)<<9)|((t.getMonth()+1)<<5)|t.getDate())&0xFFFF;
+    var local=[].concat([80,75,3,4],u16(20),u16(0x0800),u16(0),u16(dosT),u16(dosD),u32(c),u32(data.length),u32(data.length),u16(name.length),u16(0));
+    var lb=new Uint8Array(local.length+name.length+data.length);
+    lb.set(local,0);lb.set(name,local.length);lb.set(data,local.length+name.length);parts.push(lb);
+    var cd=[].concat([80,75,1,2],u16(20),u16(20),u16(0x0800),u16(0),u16(dosT),u16(dosD),u32(c),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off));
+    var cb=new Uint8Array(cd.length+name.length);cb.set(cd,0);cb.set(name,cd.length);central.push(cb);off+=lb.length;
+  });
+  var csize=central.reduce(function(a,b){return a+b.length;},0),psize=parts.reduce(function(a,b){return a+b.length;},0);
+  var end=[].concat([80,75,5,6],u16(0),u16(0),u16(files.length),u16(files.length),u32(csize),u32(psize),u16(0));
+  var out=new Uint8Array(psize+csize+end.length),pos=0;
+  parts.forEach(function(b){out.set(b,pos);pos+=b.length;});
+  central.forEach(function(b){out.set(b,pos);pos+=b.length;});
+  out.set(new Uint8Array(end),pos);
+  return new Blob([out],{type:'application/zip'});
+}
+
+/* ---------- 核心：等比缩放到 1440 ---------- */
+function processData(src,base){
+  return new Promise(function(res){
+    var im=new Image();
+    im.onload=function(){
+      var nw=1440,nh=Math.max(1,Math.round(im.height*nw/im.width));
+      var outH=Math.max(144,nh),notes=[],ok=(im.width===1440&&im.height>=144&&im.height<=2400);
+      if(ok)notes.push('原图本来就合规，已按设置重存');
+      if(nh>2400)notes.push('缩放后高度 '+nh+' > 2400，后台仍会拒绝，请回拼版工具减少行数/按钮高度');
+      if(outH>nh)notes.push('缩放后仅 '+nh+' 高（低于 144），已补白到 144');
+      var c=document.createElement('canvas');c.width=nw;c.height=outH;
+      var x=c.getContext('2d');
+      if(BG==='white'){x.fillStyle='#FFFFFF';x.fillRect(0,0,nw,outH);}else{x.clearRect(0,0,nw,outH);}
+      x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
+      x.drawImage(im,0,Math.round((outH-nh)/2),nw,nh);
+      var tc=document.createElement('canvas');tc.width=200;tc.height=Math.max(1,Math.round(outH*200/nw));
+      tc.getContext('2d').drawImage(c,0,0,tc.width,tc.height);
+      c.toBlob(function(b){
+        if(!b){res(null);return;}
+        res({name:base+'_1440.png',base:base,src:src,blob:b,ow:im.width,oh:im.height,nw:nw,nh:outH,
+             notes:notes,thumb:tc.toDataURL('image/png'),bad:nh>2400});
+      },'image/png');
+    };
+    im.onerror=function(){res(null);};
+    im.src=src;
+  });
+}
+function readFile(f){
+  return new Promise(function(res){
+    var fr=new FileReader();fr.onload=function(){res(fr.result);};fr.onerror=function(){res(null);};fr.readAsDataURL(f);
+  });
+}
+async function handle(fl){
+  var arr=Array.prototype.slice.call(fl).filter(function(f){return /^image\//.test(f.type);});
+  for(var i=0;i<arr.length;i++){
+    var src=await readFile(arr[i]);if(!src)continue;
+    var r=await processData(src,baseName(arr[i].name));
+    if(r)ITEMS.push(r);
+  }
+  renderList();
+}
+function renderList(){
+  $('cnt').textContent=ITEMS.length?('已处理 '+ITEMS.length+' 张'):'';
+  $('zipBtn').disabled=!ITEMS.length;
+  if(!ITEMS.length){$('list').innerHTML='<p class="empty">还没有图片</p>';return;}
+  var h='';
+  ITEMS.forEach(function(it,i){
+    h+='<div class="item '+(it.bad?'bad':'')+'">'+
+      '<img src="'+it.thumb+'" alt="">'+
+      '<div class="info"><div class="fn">'+esc(it.name)+'</div>'+
+      '<div class="dim">'+it.ow+' × '+it.oh+'　→　<b>1440 × '+it.nh+'</b>　（'+(it.blob.size/1024/1024).toFixed(2)+' MB）</div>'+
+      '<div class="note">'+(it.notes.length?esc(it.notes.join('；')):'尺寸合规，可直接上传')+'</div></div>'+
+      '<button class="btn" data-i="'+i+'">下载</button></div>';
+  });
+  $('list').innerHTML=h;
+}
+
+/* ---------- 事件 ---------- */
+$('files').addEventListener('change',function(e){handle(e.target.files);e.target.value='';});
+var dz=$('drop');
+['dragenter','dragover'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.add('over');});});
+['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.remove('over');});});
+dz.addEventListener('drop',function(e){handle(e.dataTransfer.files);});
+$('bgMode').addEventListener('change',async function(){
+  BG=this.value;
+  for(var i=0;i<ITEMS.length;i++){
+    var r=await processData(ITEMS[i].src,ITEMS[i].base);
+    if(r)ITEMS[i]=r;
+  }
+  renderList();
+});
+$('list').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-i]');if(!b)return;
+  var it=ITEMS[Number(b.dataset.i)];if(it)dl(it.blob,it.name);
+});
+$('zipBtn').addEventListener('click',async function(){
+  var files=[];
+  for(var i=0;i<ITEMS.length;i++){
+    var ab=await ITEMS[i].blob.arrayBuffer();
+    files.push({name:ITEMS[i].name,data:new Uint8Array(ab)});
+  }
+  dl(zip(files),'图片宽度1440_'+ITEMS.length+'张.zip');
+});
+$('clearBtn').addEventListener('click',function(){ITEMS=[];renderList();});
+</script>
+</body>
+</html>
