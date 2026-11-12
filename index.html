@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>一行多按钮拼版 · 标题 / 自定义图 / 个性外框 / 热区坐标</title>
+<style>
+:root{--bg:#F5F7FB;--card:#FFF;--line:#E3E8F0;--ink:#262C3A;--mute:#6C7484;--red:#C8161D;--blue:#2F6FED}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 "Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif}
+.wrap{max-width:1460px;margin:0 auto;padding:22px}
+h1{font-size:24px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:13px;margin-bottom:14px}
+.upd{background:#EAF7F0;border:1px solid #BFE6D1;color:#167A4A;border-radius:10px;padding:9px 13px;font-size:13px;margin-bottom:16px}
+.upd b{color:#0E5C36}
+.cols{display:grid;grid-template-columns:452px 1fr;gap:18px;align-items:start}
+/* 右列整体吸附在视口内：sticky 必须放在 grid item 上，放在内部卡片上会因父容器太矮而提前失效 */
+#right{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#C7D1E0 transparent}
+#right::-webkit-scrollbar{width:8px}
+#right::-webkit-scrollbar-thumb{background:#C7D1E0;border-radius:8px}
+#right::-webkit-scrollbar-track{background:transparent}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.card h3{font-size:15px;margin:0 0 10px;padding-left:10px;border-left:4px solid var(--blue);cursor:pointer;user-select:none}
+.card h3::after{content:'▾';float:right;color:var(--mute);font-size:12px}
+.card.fold h3::after{content:'▸'}
+.card.fold .cbody{display:none}
+.row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.lb{width:78px;flex:none;color:var(--mute);font-size:13px}
+input[type=text],input[type=number],input[type=password],select{border:1px solid var(--line);border-radius:7px;padding:6px 9px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink)}
+input[type=number]{width:78px}
+input[type=range]{flex:1;min-width:88px;accent-color:var(--blue)}
+input[type=color]{width:34px;height:30px;padding:1px;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer;flex:none}
+.val{width:42px;text-align:right;font-variant-numeric:tabular-nums;color:var(--mute);font-size:12px}
+.seg{display:flex;gap:5px;flex-wrap:wrap}
+.seg label{border:1px solid var(--line);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:12.5px;background:#fff;white-space:nowrap}
+.seg input{display:none}
+.seg input:checked+span{color:var(--blue);font-weight:700}
+.seg label:has(input:checked){border-color:var(--blue);background:#EEF3FF}
+textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:13px/1.7 inherit;resize:vertical}
+.hint{color:var(--mute);font-size:12px;margin:2px 0 0;width:100%}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+.chk input{accent-color:var(--blue)}
+.btn{border:0;border-radius:8px;padding:9px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.p{background:var(--blue);color:#fff}
+.btn.g{background:#EEF2F9;color:var(--ink)}
+.btn.r{background:var(--red);color:#fff}
+.btn.s{padding:6px 10px;font-size:12px;font-weight:600}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.filebox{border:1px dashed #B9C6DC;border-radius:9px;padding:10px;background:#FAFCFF;font-size:12.5px}
+.filebox input[type=file]{font-size:12px;width:100%;margin:4px 0}
+.pvcard{position:static}
+.pvbox{background:#E9EDF5;border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center;overflow:auto}
+#pv{max-width:100%;height:auto;border-radius:4px;box-shadow:0 3px 14px rgba(0,0,0,.12);display:block;margin:0 auto}
+.metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+.tag{background:#fff;border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--mute)}
+.tag b{color:var(--ink)}
+.tag.ok{background:#EAF7F0;border-color:#BFE6D1;color:#167A4A}
+.tag.warn{background:#FFF3E6;border-color:#F5D3A8;color:#A35B10}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+th{background:#F7F9FD;color:var(--mute);font-weight:600}
+code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
+.note{background:#FFF6F5;border:1px solid #F3CFCC;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#8A2A22;margin-top:10px}
+.note b{color:var(--red)}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#262C3A;color:#fff;padding:10px 20px;border-radius:9px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99}
+#toast.on{opacity:1}
+.zoombar{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px;font-size:12px;color:var(--mute)}
+/* 方案记录 */
+.recnow{background:#EEF3FF;border:1px solid #C9D9FF;border-radius:8px;padding:8px 10px;font-size:12.5px;color:#2F6FED;margin-bottom:10px;line-height:1.55}
+.recnow b{color:#1B4FC0}
+.recnow.dirty{background:#FFF3E6;border-color:#F5D3A8;color:#A35B10}
+.recnow.dirty b{color:#8A4A08}
+.recitem{display:flex;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px;margin-bottom:8px;cursor:pointer;background:#fff;transition:.15s}
+.recitem:hover{border-color:var(--blue);background:#FAFCFF}
+.recitem.cur{border-color:var(--blue);background:#EEF3FF;box-shadow:0 0 0 2px rgba(47,111,237,.12)}
+.recitem img,.recnoimg{width:96px;height:58px;flex:none;border-radius:6px;border:1px solid var(--line);background:#fff;object-fit:contain}
+.recnoimg{display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:11px}
+.recinfo{flex:1;min-width:0}
+.recname{font-weight:700;font-size:13.5px;word-break:break-all}
+.recmeta{color:var(--mute);font-size:11.5px;margin:2px 0 6px;line-height:1.5}
+.recops{display:flex;gap:6px;flex-wrap:wrap}
+.fmt{background:#F7F9FD;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:12.5px;color:var(--mute);margin-top:8px;line-height:1.7}
+.fmt b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>一行多按钮拼版 · 整图 + 热区坐标</h1>
+  <p class="sub">把「标题 + 一行多个按钮 + 说明」画进 <b>一张整图</b>，上传给「多热区切图」模块，按下方坐标框热区、逐个设链接。</p>
+  <div class="upd"><b>本次新增：</b>① 标题（7 种艺术字 + 任意颜色，位于按钮行上方）② 按钮可上传自定义图，按每行个数自动缩放 ③ 整图 8 种个性外框 + 颜色/粗细/圆角 ④ 独立「副标 / 说明文字」输入框，全部文字颜色可自定义 ⑤ 整图底色自定义色与渐变 ⑥ <b>方案记录</b>：存一条、点一下就恢复，只改要改的地方 ⑦ <b>可修改格式</b>：导出工程文件 .json（回到本工具继续改）和可编辑 SVG（文字是文本，可用矢量软件直接改字）⑧ <b>行数自定义 1~20 行</b> ⑨ <b>云端方案库</b>：方案记录同步到 Cloudflare KV，换电脑继续用。</div>
+
+  <div class="cols">
+    <!-- 左：参数 -->
+    <div id="left">
+      <div class="card" data-sec="1"><h3>1 · 画布与排布</h3><div class="cbody">
+        <div class="row"><span class="lb">画布宽度</span><div class="seg" id="segW"></div></div>
+        <div class="row"><span class="lb">每行个数</span><div class="seg" id="segN"></div></div>
+        <div class="row"><span class="lb">行数</span><div class="seg" id="segR"></div>
+          <input type="number" data-k="R" id="rowCustom" min="1" max="20" step="1" title="自定义行数 1~20" style="width:62px">
+          <span class="hint" style="width:auto">或直接输入 1~20 行</span></div>
+        <div class="row"><span class="lb">按钮圆角 R</span><input type="range" data-k="radius" min="0" max="90" step="2"><span class="val" data-v="radius"></span></div>
+        <div class="row"><span class="lb">左右边距</span><input type="range" data-k="margin" min="0" max="140" step="4"><span class="val" data-v="margin"></span></div>
+        <div class="row"><span class="lb">按钮间距</span><input type="range" data-k="gapX" min="0" max="90" step="2"><span class="val" data-v="gapX"></span></div>
+        <div class="row"><span class="lb">按钮高度</span><input type="range" data-k="btnH" min="50" max="520" step="10"><span class="val" data-v="btnH"></span></div>
+        <div class="row"><span class="lb">行间距</span><input type="range" data-k="gapY" min="0" max="90" step="2"><span class="val" data-v="gapY"></span></div>
+        <div class="row"><span class="lb">上下留白</span><input type="range" data-k="padY" min="0" max="180" step="4"><span class="val" data-v="padY"></span></div>
+        <p class="hint">按钮宽度 =（可用宽 − 间距）/ 每行个数，改「每行个数」时按钮与自定义图会自动等比缩放。<b>行数支持自定义 1~20 行</b>（上方数字框直接输入），快捷按钮给出常用值；行数多导致整图超过 2400px 时，调小「按钮高度」或拆成多张图。按钮高度最低 50px，调矮时记得同步调小文字字号和圆角；若提示「高度需 144~2400」，把上下留白调大一点即可凑够下限。</p>
+      </div></div>
+
+      <div class="card" data-sec="2"><h3>2 · 标题（艺术字，位于按钮行上方）</h3><div class="cbody">
+        <div class="row"><label class="chk"><input type="checkbox" data-k="showTitle" checked>启用标题</label></div>
+        <textarea data-k="titleText" rows="2" spellcheck="false">额外肥料入口</textarea>
+        <p class="hint">可多行；标题会做进图片，改字需重新导出上传。</p>
+        <div class="row"><span class="lb">艺术字样式</span><select data-k="titleStyle" id="selTitleStyle"></select></div>
+        <div class="row"><span class="lb">字体</span><select data-k="titleFont" id="selTitleFont"></select>
+          <span class="lb" style="width:auto">字重</span><select data-k="titleWeight" id="selTitleWeight"></select></div>
+        <div class="row"><span class="lb">标题字号</span><input type="range" data-k="titleSize" min="28" max="150" step="2"><span class="val" data-v="titleSize"></span></div>
+        <div class="row"><span class="lb">主色</span><input type="color" data-k="titleColor"><div class="seg" id="segTitleC"></div></div>
+        <div class="row"><span class="lb">第二色</span><input type="color" data-k="titleColor2"><div class="seg" id="segTitleC2"></div></div>
+        <div class="row"><span class="lb">描边色</span><input type="color" data-k="titleStrokeC"><div class="seg" id="segTitleSC"></div></div>
+        <div class="row"><span class="lb">描边粗细</span><input type="range" data-k="titleStrokeW" min="0" max="16" step="1"><span class="val" data-v="titleStrokeW"></span></div>
+        <div class="row"><span class="lb">字间距</span><input type="range" data-k="titleSpacing" min="0" max="20" step="1"><span class="val" data-v="titleSpacing"></span></div>
+        <div class="row"><span class="lb">对齐</span><div class="seg" id="segTitleAlign"></div></div>
+        <div class="row"><span class="lb">下方间距</span><input type="range" data-k="titleGap" min="0" max="90" step="2"><span class="val" data-v="titleGap"></span></div>
+        <p class="hint">「渐变 / 立体 / 双色」用第二色；「描边 / 渐变描边」用描边色。所有颜色都可点色块自由取色。</p>
+      </div></div>
+
+      <div class="card" data-sec="3"><h3>3 · 副标 / 说明文字（独立输入框）</h3><div class="cbody">
+        <textarea data-k="subText" rows="3" spellcheck="false">① 每个入口只有 1 次机会　② 入口不显示肥料数量是正常的
+③ 部分号可能不到账，下完去看肥料明细</textarea>
+        <p class="hint">这里填整块说明文字（支持多行），就是参考店那种 ①②③ 小字；不需要可清空。</p>
+        <div class="row"><span class="lb">放置位置</span><div class="seg" id="segSubPos"></div></div>
+        <div class="row"><span class="lb">字号</span><input type="range" data-k="subSize" min="14" max="60" step="2"><span class="val" data-v="subSize"></span></div>
+        <div class="row"><span class="lb">文字颜色</span><input type="color" data-k="subColor"><div class="seg" id="segSubC"></div></div>
+        <div class="row"><span class="lb">对齐</span><div class="seg" id="segSubAlign"></div></div>
+        <div class="row"><span class="lb">与内容间距</span><input type="range" data-k="subGap" min="0" max="80" step="2"><span class="val" data-v="subGap"></span></div>
+      </div></div>
+
+      <div class="card" data-sec="4"><h3>4 · 按钮文案（所有文字颜色可自定义）</h3><div class="cbody">
+        <div class="row"><label class="chk"><input type="checkbox" data-k="showText" checked>把按钮文字做进图片</label>
+          <span class="hint">关掉＝纯底图（配合「图文导航」类模块后台填字）</span></div>
+        <textarea id="labels" rows="4" spellcheck="false">百补|5.7w
+秒杀|5.7w
+秒杀|4w
+签到|元宝</textarea>
+        <p class="hint">每行一个按钮：<code>主文案 | 小字副标</code>（副标可省略）。数量不足自动补「入口 N」。</p>
+        <div class="row"><span class="lb">主文字号</span><input type="range" data-k="fs" min="20" max="110" step="2"><span class="val" data-v="fs"></span></div>
+        <div class="row"><span class="lb">副标字号</span><input type="range" data-k="fs2" min="12" max="64" step="2"><span class="val" data-v="fs2"></span></div>
+        <div class="row"><span class="lb">主文字色</span><input type="color" data-k="tc"><div class="seg" id="segTC"></div></div>
+        <div class="row"><span class="lb">副标颜色</span><input type="color" data-k="tsub"><div class="seg" id="segTSub"></div></div>
+        <p class="hint">按钮副标（<code>|</code> 后面的小字）颜色也能自定义，不再固定灰色。</p>
+      </div></div>
+
+      <div class="card" data-sec="5"><h3>5 · 按钮自定义图（按每行个数自动缩放）</h3><div class="cbody">
+        <div class="row"><span class="lb">图片模式</span><div class="seg" id="segImgMode"></div></div>
+        <div class="filebox">
+          <div>统一图（所有按钮用同一张）：<input type="file" id="imgSingle" accept="image/*"></div>
+          <div style="margin-top:8px">逐格图（多选，按按钮顺序 1→N 分配）：<input type="file" id="imgPer" accept="image/*" multiple></div>
+          <div class="bar" style="margin-top:6px"><button class="btn g s" id="imgClear">清除全部图片</button><span id="imgInfo" style="color:var(--mute);align-self:center">尚未上传图片</span></div>
+        </div>
+        <div class="row" style="margin-top:8px"><span class="lb">适配方式</span><div class="seg" id="segImgFit"></div></div>
+        <div class="row"><span class="lb">图片缩放</span><input type="range" data-k="imgScale" min="50" max="160" step="5"><span class="val" data-v="imgScale"></span></div>
+        <div class="row"><span class="lb">图片透明度</span><input type="range" data-k="imgOpacity" min="10" max="100" step="5"><span class="val" data-v="imgOpacity"></span></div>
+        <div class="row"><label class="chk"><input type="checkbox" data-k="imgKeepBg" checked>有图时仍画按钮底色</label></div>
+        <p class="hint">图片会按当前按钮宽高自动铺入并裁圆角；改「每行个数」后自动跟着变大/变小。图片会随「方案记录」和「工程文件」一起保存；未存档的临时编辑刷新后需重新上传。</p>
+      </div></div>
+
+      <div class="card" data-sec="6"><h3>6 · 配色与版本（底色可自定义 / 渐变）</h3><div class="cbody">
+        <div class="row"><span class="lb">按钮配色</span><div class="seg" id="segPal"></div></div>
+        <div class="row"><span class="lb">版本</span><div class="seg" id="segMode"></div></div>
+        <div class="row"><span class="lb">整图底色</span><div class="seg" id="segBG"></div></div>
+        <div class="row"><span class="lb">自定义底色</span><input type="color" data-k="bgCustom"><div class="seg" id="segBGC"></div></div>
+        <div class="row"><span class="lb">渐变第二色</span><input type="color" data-k="bgCustom2"><span class="hint" style="width:auto">选「渐变」时生效</span></div>
+        <div class="row"><span class="lb">渐变方向</span><div class="seg" id="segBGDir"></div></div>
+        <div class="row"><span class="lb">底色不透明</span><input type="range" data-k="bgOpacity" min="10" max="100" step="5"><span class="val" data-v="bgOpacity"></span></div>
+        <div class="row"><span class="lb">自定义填充</span><input type="color" data-k="customFill"><span class="hint" style="width:auto">按钮配色选「自定义」时生效</span></div>
+        <div class="row"><span class="lb">按钮描边色</span><input type="color" data-k="strokeColor"><label class="chk"><input type="checkbox" data-k="strokeCustom">覆盖配色描边</label></div>
+        <div class="row"><span class="lb">描边粗细</span><input type="range" data-k="stroke" min="0" max="24" step="1"><span class="val" data-v="stroke"></span></div>
+      </div></div>
+
+      <div class="card" data-sec="7"><h3>7 · 整图外框（8 种个性边框）</h3><div class="cbody">
+        <div class="row"><span class="lb">外框样式</span><div class="seg" id="segFrame"></div></div>
+        <div class="row"><span class="lb">边框颜色</span><input type="color" data-k="frameColor"><div class="seg" id="segFrameC"></div></div>
+        <div class="row"><span class="lb">第二色</span><input type="color" data-k="frameColor2"><span class="hint" style="width:auto">渐变 / 双线 / 角标用</span></div>
+        <div class="row"><span class="lb">边框粗细</span><input type="range" data-k="frameW" min="1" max="30" step="1"><span class="val" data-v="frameW"></span></div>
+        <div class="row"><span class="lb">外框圆角</span><input type="range" data-k="frameRadius" min="0" max="120" step="2"><span class="val" data-v="frameRadius"></span></div>
+        <div class="row"><span class="lb">离边距离</span><input type="range" data-k="frameInset" min="0" max="60" step="2"><span class="val" data-v="frameInset"></span></div>
+        <div class="row"><span class="lb">框内边距</span><input type="range" data-k="framePad" min="0" max="80" step="2"><span class="val" data-v="framePad"></span></div>
+        <div class="row"><span class="lb">框内底色</span><input type="color" data-k="frameFill"><label class="chk"><input type="checkbox" data-k="frameFillOn">启用（留空＝透出整图底色）</label></div>
+        <p class="hint">外框会画在最上层，标题、按钮、说明都包在里面；框内边距会同步把内容往里收。</p>
+      </div></div>
+
+      <div class="card" data-sec="8"><h3>8 · 导出</h3><div class="cbody">
+        <div class="bar">
+          <button class="btn r" id="dlBtn">下载 PNG</button>
+          <button class="btn g" id="jpgBtn">下载 JPG（实底）</button>
+          <button class="btn g" id="copyBtn">复制热区坐标</button>
+          <button class="btn g" id="txtBtn">下载坐标表</button>
+          <button class="btn p" id="zipBtn">批量打包（4 配色 × 2 版本 + 当前设置）</button>
+        </div>
+        <div class="row" style="margin-top:8px"><label class="chk"><input type="checkbox" data-k="zipCur" checked>批量包额外带一张「当前设置」</label></div>
+        <p class="hint" id="zipHint">批量包内附 说明.txt（尺寸 + 全部参数 + 热区坐标）。</p>
+        <div class="bar" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">
+          <button class="btn p" id="projBtn">导出工程文件 .json（可修改）</button>
+          <button class="btn g" id="svgBtn">导出可编辑 SVG（文字可改）</button>
+          <button class="btn g" id="projImportBtn">导入工程文件</button>
+          <input type="file" id="projFile" accept=".json,application/json" style="display:none">
+        </div>
+        <div class="fmt"><b>两种「可修改格式」的区别：</b><br>
+          · <b>工程文件 .json</b>：保存全部参数、文案、自定义图。回到本工具点「导入工程文件」即可继续调，只改要改的那几处再导出 PNG，效果与原图 100% 一致。<b>推荐</b>。<br>
+          · <b>可编辑 SVG</b>：文字是真正的文本节点，可用 Illustrator / Inkscape / Figma 直接改字，不必打开本工具。字体依赖电脑、艺术字会有细微差异，且<b>淘宝后台不收 SVG</b>，改完需另存为 PNG 再上传。</div>
+      </div></div>
+
+      <div class="card" data-sec="9"><h3>9 · 方案记录（存一条，点一下就能改）</h3><div class="cbody">
+        <div class="recnow" id="recNow">当前：临时编辑（未存为记录）</div>
+        <div class="row"><span class="lb">记录名称</span><input type="text" id="recName" placeholder="例如：首页功能入口 / 活动版" style="flex:1;min-width:150px"></div>
+        <div class="bar">
+          <button class="btn p" id="recSave">保存为记录</button>
+          <button class="btn g" id="recUpdate">更新当前记录</button>
+          <button class="btn g" id="recExport">导出备份</button>
+          <button class="btn g" id="recImportBtn">导入备份</button>
+          <input type="file" id="recImportFile" accept=".json,application/json" style="display:none">
+        </div>
+        <p class="hint" style="margin-top:6px">点记录（或「载入修改」）即可恢复当时全部参数、文案和按钮图，只改变动的部分；改完点「更新当前记录」覆盖，或改个名称再「保存为记录」另存一条。</p>
+        <div id="recList" style="margin-top:10px"></div>
+
+        <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)">
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--blue)">☁ 云端方案库（Cloudflare KV · 换电脑 / 换浏览器继续用）</div>
+          <div class="row"><span class="lb">API 地址</span><input type="text" id="cloudApi" placeholder="https://xxx.pages.dev" style="flex:1;min-width:170px"></div>
+          <div class="row"><span class="lb">方案库 ID</span><input type="text" id="cloudSpace" placeholder="自定义，如 shop-2026" style="flex:1;min-width:170px">
+            <span class="hint" style="width:auto">相当于秘密路径，请设成不易猜到的字符串</span></div>
+          <div class="row"><span class="lb">访问口令</span><input type="password" id="cloudSecret" placeholder="可选；首次保存时设定，之后写入需一致" style="flex:1;min-width:170px"></div>
+          <div class="bar">
+            <button class="btn p s" id="cloudSave">☁ 保存到云端</button>
+            <button class="btn g s" id="cloudLoad">☁ 从云端载入</button>
+            <button class="btn g s" id="cloudTest">测试连接</button>
+          </div>
+          <div class="row" style="margin-top:6px"><label class="chk"><input type="checkbox" id="cloudAuto">记录变更后自动同步</label>
+            <label class="chk"><input type="checkbox" id="cloudRemember">记住本机设置（含口令）</label></div>
+          <div class="recnow" id="cloudNow" style="margin-top:8px">云端：尚未连接</div>
+          <p class="hint">「保存到云端」把当前全部记录（含缩略图、参数、按钮图）写进 KV；「从云端载入」把云端记录合并进本地列表（同 ID 覆盖、本地独有保留）。本地记录始终保留，云端用于跨设备同步。访问口令首次写入即设定且不能在页面里清除，请记牢；不勾选「记住本机设置」时刷新后需重填口令。</p>
+        </div>
+
+        <div class="fmt"><b>记录 vs 工程文件：</b>记录存在本浏览器里，随开随点、最方便，换电脑或清缓存会丢（可同步到上方云端方案库）；工程文件是独立 .json 文件，可备份、可发给别人、换设备用「导入工程文件」打开。<b>建议重要方案两个都留一份。</b></div>
+      </div></div>
+    </div>
+
+    <!-- 右：预览 -->
+    <div id="right">
+      <div class="card pvcard">
+        <h3>实时预览（导出为原尺寸，下方热区坐标按原尺寸）</h3>
+        <div class="cbody">
+          <div class="pvbox"><canvas id="pv"></canvas></div>
+          <div class="zoombar">预览缩放 <input type="range" id="zoom" min="30" max="100" step="5" value="50" style="max-width:180px"><span id="zoomV">50%</span></div>
+          <div class="metrics">
+            <span class="tag">导出尺寸 <b id="mSize">—</b></span>
+            <span class="tag" id="mCheck">—</span>
+            <span class="tag">按钮数 <b id="mCount">—</b></span>
+            <span class="tag">按钮宽 <b id="mBW">—</b></span>
+          </div>
+          <div class="note"><b>标题、按钮文字、说明文字都在图片里</b>，改字要重新导出上传；链接在后台热区里改，不用动图。热区只框「按钮」，不要把标题和说明框进去。</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>热区坐标（按原尺寸，框热区时照此拖框）</h3>
+        <div class="cbody">
+          <table id="coordTab"><thead><tr><th>#</th><th>文案</th><th>x</th><th>y</th><th>宽 w</th><th>高 h</th><th>百分比（如后台要）</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>后台操作步骤</h3>
+        <div class="cbody">
+          <p style="margin:0 0 6px">① 左侧「官方模块」→ 基础功能 → 图文视频 → 把 <b>「多热区切图」</b> 拖到画布（「单图海报」只能放 1 个链接）。</p>
+          <p style="margin:0 0 6px">② 上传这里导出的 PNG（PC 端宽 1440，jpg/png，单文件 ≤20MB）→ 填模块名称。</p>
+          <p style="margin:0 0 6px">③ 点 <b>「添加热区」</b> → 在图上拖出矩形，照上表只圈住每个按钮 → 每个热区单独填跳转链接。</p>
+          <p style="margin:0 0 6px">④ 保存 → 预览 → <b>发布</b>（只保存不发布买家看不到）。</p>
+          <p style="margin:0;color:var(--red)"><b>提示：</b>若发现后台有「多图 / 双列图片 / 图文导航」类模块，可改用纯底图 + 后台填字，改字更方便；本工具面向「一张整图 + 多热区」的做法。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ==================== 常量与状态 ==================== */
+var PALS=[
+ {k:'sand',n:'暖沙米',f:'#F1EDE5',l:'#CFC6B6'},
+ {k:'mist',n:'雾霭蓝',f:'#E7EEF3',l:'#BFCEDB'},
+ {k:'sage',n:'豆青灰',f:'#E8EFE7',l:'#C2D2C0'},
+ {k:'clay',n:'藕荷灰',f:'#F0E9EA',l:'#D6C7C9'},
+ {k:'custom',n:'自定义',f:'#DDE8F0',l:'#9FB6C4'}
+];
+var TITLE_STYLES=[['plain','纯色'],['gradient','渐变'],['outline','描边'],['gradStroke','渐变+描边'],['shadow','立体阴影'],['neon','发光'],['double','双色错位']];
+var FONTS={
+ hei:'"Noto Sans CJK SC","Microsoft YaHei","PingFang SC",sans-serif',
+ song:'"Noto Serif CJK SC","SimSun","Songti SC",serif',
+ kai:'"KaiTi","STKaiti","Noto Serif CJK SC",serif',
+ round:'"Arial Rounded MT Bold","Yuanti SC","Microsoft YaHei",sans-serif',
+ heavy:'"Impact","Arial Black","Noto Sans CJK SC",sans-serif'
+};
+var FRAMES=['none','solid','dashed','dotted','double','gradient','corner','dots','glow'];
+var FRAME_NAMES={none:'无',solid:'实线',dashed:'虚线',dotted:'点线',double:'双线',gradient:'渐变',corner:'四角标',dots:'圆点花边',glow:'外发光'};
+
+var D={
+ W:1440,N:4,R:1,radius:26,margin:48,gapX:24,btnH:200,gapY:20,padY:40,
+ showTitle:true,titleText:'额外肥料入口',titleStyle:'gradStroke',titleFont:'hei',titleWeight:'900',
+ titleSize:82,titleColor:'#E1251B',titleColor2:'#FF8A3D',titleStrokeC:'#FFFFFF',titleStrokeW:9,
+ titleSpacing:2,titleAlign:'center',titleGap:30,
+ subText:'① 每个入口只有 1 次机会　② 入口不显示肥料数量是正常的\n③ 部分号可能不到账，下完去看肥料明细',
+ subPos:'bottom',subSize:28,subColor:'#8A2A22',subAlign:'center',subGap:22,
+ showText:true,fs:46,fs2:26,tc:'#C8161D',tsub:'#8A857C',
+ imgMode:'none',imgFit:'cover',imgScale:100,imgOpacity:100,imgKeepBg:true,
+ pal:'sand',mode:'fill',bg:'transparent',bgCustom:'#FFF3F5',bgCustom2:'#FFE0E6',bgDir:'v',bgOpacity:100,
+ customFill:'#DDE8F0',strokeColor:'#C9A0A8',strokeCustom:false,stroke:6,
+ frame:'none',frameColor:'#E8A0AE',frameColor2:'#C8161D',frameW:8,frameRadius:40,
+ frameInset:10,framePad:24,frameFill:'#FFFFFF',frameFillOn:false,
+ zipCur:true
+};
+var STORE='tb_btnrow_v2';
+try{var raw=localStorage.getItem(STORE);if(raw){var o=JSON.parse(raw);for(var k in D)if(o[k]!==undefined)D[k]=o[k];}}catch(e){}
+var labels=[],labelsRaw='百补|5.7w\n秒杀|5.7w\n秒杀|4w\n签到|元宝';
+try{var sl=localStorage.getItem(STORE+'_labels');if(sl)labelsRaw=sl;}catch(e){}
+var IMG={single:null,per:[]},IMG_BUSY=Promise.resolve();
+function save(){try{localStorage.setItem(STORE,JSON.stringify(D));localStorage.setItem(STORE+'_labels',document.getElementById('labels').value);}catch(e){}}
+
+/* ==================== 工具函数 ==================== */
+function pal(){for(var i=0;i<PALS.length;i++)if(PALS[i].k===D.pal)return PALS[i];return PALS[0];}
+function fillColor(){return D.pal==='custom'?D.customFill:pal().f;}
+function lineColor(){return D.strokeCustom?D.strokeColor:pal().l;}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function toast(t){var e=document.getElementById('toast');e.textContent=t;e.classList.add('on');clearTimeout(window._tt);window._tt=setTimeout(function(){e.classList.remove('on');},1900);}
+function dl(blob,name){var u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1500);}
+function toBlob(cv,type){return new Promise(function(res){cv.toBlob(function(b){res(b);},type||'image/png',0.92);});}
+function rr(ctx,x,y,w,h,r){
+  r=Math.max(0,Math.min(r,w/2,h/2));ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+function lines(s){return String(s||'').split('\n').map(function(x){return x.trim();}).filter(function(x){return x.length;});}
+function getLabels(){
+  var t=document.getElementById('labels').value.split('\n'),arr=[];
+  for(var i=0;i<t.length;i++){
+    var s=t[i].trim();if(!s)continue;
+    var p=s.split('|');arr.push({main:(p[0]||'').trim(),sub:(p[1]||'').trim()});
+  }
+  while(arr.length<D.N*D.R)arr.push({main:'入口 '+(arr.length+1),sub:''});
+  labels=arr.slice(0,D.N*D.R);save();return labels;
+}
+
+/* ==================== 几何 ==================== */
+function extraPad(){return D.frame!=='none'?(D.frameInset+D.framePad+D.frameW):0;}
+function geom(){
+  var W=D.W,ex=extraPad(),top=ex+D.padY;
+  var tl=D.showTitle?lines(D.titleText):[];
+  var titleH=tl.length?tl.length*D.titleSize*1.28+D.titleGap:0;
+  var sl=lines(D.subText),subH=sl.length?sl.length*D.subSize*1.5:0;
+  var subTopH=(D.subPos==='top'&&subH)?subH+D.subGap:0;
+  var rowsH=D.R*D.btnH+(D.R-1)*D.gapY;
+  var subBotH=(D.subPos==='bottom'&&subH)?D.subGap+subH:0;
+  var H=Math.round(top+titleH+subTopH+rowsH+subBotH+D.padY+ex);
+  var cb={x0:ex+D.margin,x1:W-ex-D.margin,cx:W/2};cb.w=cb.x1-cb.x0;
+  var bw=(cb.w-(D.N-1)*D.gapX)/D.N;
+  return {W:W,H:H,bw:bw,top:top,titleH:titleH,subTopH:subTopH,rowsH:rowsH,subH:subH,subBotH:subBotH,
+          titleLines:tl,subLines:sl,cb:cb,rowsTop:top+titleH+subTopH};
+}
+function rects(g){
+  var rs=[];
+  for(var r=0;r<D.R;r++)for(var c=0;c<D.N;c++)
+    rs.push({x:g.cb.x0+c*(g.bw+D.gapX),y:g.rowsTop+r*(D.btnH+D.gapY),w:g.bw,h:D.btnH,i:r*D.N+c});
+  return rs;
+}
+
+/* ==================== 绘制：底色 / 外框底 / 标题 / 说明 / 按钮 / 外框线 ==================== */
+function paintBG(ctx,g,forceWhite){
+  var bg=forceWhite?'white':D.bg;
+  if(bg==='transparent')return;
+  var c;
+  if(bg==='custom')c=D.bgCustom;
+  else if(bg==='gradient'){
+    var gr=D.bgDir==='h'?ctx.createLinearGradient(0,0,g.W,0):
+           D.bgDir==='d'?ctx.createLinearGradient(0,0,g.W,g.H):ctx.createLinearGradient(0,0,0,g.H);
+    gr.addColorStop(0,D.bgCustom);gr.addColorStop(1,D.bgCustom2);c=gr;
+  }else c={white:'#FFFFFF',cream:'#F6F3EC',pink:'#FFF0F2',blue:'#EFF5FC'}[bg]||'#FFFFFF';
+  ctx.save();ctx.globalAlpha=forceWhite?1:(D.bgOpacity/100);ctx.fillStyle=c;ctx.fillRect(0,0,g.W,g.H);ctx.restore();
+}
+function paintFrameFill(ctx,g){
+  if(D.frame==='none'||!D.frameFillOn)return;
+  var i=D.frameInset,w=g.W-2*i,h=g.H-2*i;
+  ctx.save();ctx.fillStyle=D.frameFill;rr(ctx,i,i,w,h,D.frameRadius);ctx.fill();ctx.restore();
+}
+function artText(ctx,txt,x,y,maxW,size,c1,c2,strokeC,strokeW,weight,font,align,spacing,style){
+  ctx.save();
+  ctx.font=weight+' '+size+'px '+font;
+  try{if('letterSpacing' in ctx)ctx.letterSpacing=spacing+'px';}catch(e){}
+  ctx.textAlign=align;ctx.textBaseline='middle';ctx.lineJoin='round';ctx.miterLimit=2;
+  // 渐变范围按文字实际宽度算（而不是整块可用宽），否则文字只落在渐变中段、看不出变色
+  var tw=Math.min(maxW,ctx.measureText(txt).width||size);
+  var gx0=align==='left'?x:(align==='right'?x-tw:x-tw/2),gx1=gx0+tw;
+  var g=ctx.createLinearGradient(gx0,y-size*0.5,gx1,y+size*0.5);
+  g.addColorStop(0,c1);g.addColorStop(1,c2);
+  function F(c){ctx.fillStyle=c;ctx.fillText(txt,x,y,maxW);}
+  function S(c,w){ctx.lineWidth=w;ctx.strokeStyle=c;ctx.strokeText(txt,x,y,maxW);}
+  if(style==='plain')F(c1);
+  else if(style==='gradient')F(g);
+  else if(style==='outline'){if(strokeW>0)S(strokeC,strokeW);F(c1);}
+  else if(style==='gradStroke'){if(strokeW>0)S(strokeC,strokeW);F(g);}
+  else if(style==='shadow'){
+    var off=Math.max(2,size*0.055);
+    ctx.save();ctx.translate(off,off);F(c2);ctx.restore();
+    if(strokeW>0)S(strokeC,Math.min(strokeW,3));F(c1);
+  }
+  else if(style==='neon'){
+    ctx.shadowColor=c2;ctx.shadowBlur=size*0.55;F(c2);F(c2);
+    ctx.shadowBlur=0;if(strokeW>0)S(strokeC,Math.min(strokeW,2));F(c1);
+  }
+  else if(style==='double'){
+    var d=Math.max(2,size*0.045);
+    ctx.save();ctx.translate(d,d);F(c2);ctx.restore();
+    if(strokeW>0)S(strokeC,Math.min(strokeW,2));F(c1);
+  }
+  ctx.restore();
+}
+function drawTitle(ctx,g){
+  if(!D.showTitle||!g.titleLines.length)return;
+  var cb=g.cb,maxW=cb.w-20;
+  var x=D.titleAlign==='left'?cb.x0:(D.titleAlign==='right'?cb.x1:cb.cx);
+  for(var i=0;i<g.titleLines.length;i++){
+    artText(ctx,g.titleLines[i],x,g.top+D.titleSize*0.64+i*D.titleSize*1.28,maxW,
+      D.titleSize,D.titleColor,D.titleColor2,D.titleStrokeC,D.titleStrokeW,
+      D.titleWeight,FONTS[D.titleFont]||FONTS.hei,D.titleAlign,D.titleSpacing,D.titleStyle);
+  }
+}
+function drawSub(ctx,g){
+  if(!g.subLines.length)return;
+  var y0=D.subPos==='top'?(g.top+g.titleH):(g.rowsTop+g.rowsH+D.subGap);
+  var cb=g.cb,x=D.subAlign==='left'?cb.x0:(D.subAlign==='right'?cb.x1:cb.cx);
+  ctx.save();ctx.font='700 '+D.subSize+'px '+FONTS.hei;ctx.textAlign=D.subAlign;ctx.textBaseline='middle';ctx.fillStyle=D.subColor;
+  for(var i=0;i<g.subLines.length;i++)ctx.fillText(g.subLines[i],x,y0+D.subSize*0.75+i*D.subSize*1.5,cb.w-16);
+  ctx.restore();
+}
+function drawBtnImg(ctx,img,q){
+  if(!img||!img.naturalWidth)return;
+  ctx.save();rr(ctx,q.x,q.y,q.w,q.h,D.radius);ctx.clip();
+  ctx.globalAlpha=D.imgOpacity/100;
+  var iw=img.naturalWidth,ih=img.naturalHeight,s;
+  if(D.imgFit==='stretch'){ctx.drawImage(img,q.x,q.y,q.w,q.h);ctx.restore();return;}
+  if(D.imgFit==='cover')s=Math.max(q.w/iw,q.h/ih);else s=Math.min(q.w/iw,q.h/ih);
+  s*=D.imgScale/100;
+  var dw=iw*s,dh=ih*s;
+  ctx.drawImage(img,q.x+(q.w-dw)/2,q.y+(q.h-dh)/2,dw,dh);
+  ctx.restore();
+}
+function whichImg(i){
+  if(D.imgMode==='single')return IMG.single;
+  if(D.imgMode==='per')return IMG.per[i]||null;
+  return null;
+}
+function drawButtons(ctx,g,ls,fillC,mode){
+  var rs=rects(g);
+  for(var i=0;i<rs.length;i++){
+    var q=rs[i],im=whichImg(i),hasImg=!!(im&&im.naturalWidth);
+    // 底色
+    if((mode==='fill'||mode==='both')&&(!hasImg||D.imgKeepBg)){
+      rr(ctx,q.x,q.y,q.w,q.h,D.radius);ctx.fillStyle=fillC;ctx.fill();
+    }
+    // 自定义图
+    if(hasImg)drawBtnImg(ctx,im,q);
+    // 描边
+    if((mode==='outline'||mode==='both')&&D.stroke>0){
+      rr(ctx,q.x,q.y,q.w,q.h,D.radius);ctx.lineWidth=D.stroke;ctx.strokeStyle=lineColor();ctx.stroke();
+    }
+    // 文字
+    if(D.showText){
+      var L=ls[i]||{main:'',sub:''},cx=q.x+q.w/2,cy=q.y+q.h/2,hasSub=!!L.sub;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font='700 '+D.fs+'px '+FONTS.hei;ctx.fillStyle=D.tc;
+      ctx.fillText(L.main,cx,cy-(hasSub?D.fs*0.32:0),q.w-20);
+      if(hasSub){ctx.font=D.fs2+'px '+FONTS.hei;ctx.fillStyle=D.tsub;ctx.fillText(L.sub,cx,cy+D.fs*0.72,q.w-20);}
+    }
+  }
+}
+function drawFrame(ctx,g){
+  if(D.frame==='none')return;
+  var i=D.frameInset,x=i,y=i,w=g.W-2*i,h=g.H-2*i,r=Math.min(D.frameRadius,w/2,h/2);
+  ctx.save();ctx.lineJoin='round';
+  var grad=ctx.createLinearGradient(x,y,x+w,y+h);grad.addColorStop(0,D.frameColor);grad.addColorStop(1,D.frameColor2);
+  function P(inset,rad){rr(ctx,x+inset,y+inset,w-2*inset,h-2*inset,Math.max(0,Math.min(rad,(w-2*inset)/2,(h-2*inset)/2)));}
+  function ST(c,lw,dash){
+    ctx.setLineDash(dash||[]);ctx.lineWidth=lw;ctx.strokeStyle=c;P(0,r);ctx.stroke();ctx.setLineDash([]);
+  }
+  var f=D.frame;
+  if(f==='solid')ST(D.frameColor,D.frameW);
+  else if(f==='dashed')ST(D.frameColor,D.frameW,[D.frameW*3,D.frameW*2]);
+  else if(f==='dotted'){ctx.lineCap='round';ST(D.frameColor,D.frameW,[D.frameW*0.1,D.frameW*2.2]);ctx.lineCap='butt';}
+  else if(f==='double'){
+    ST(D.frameColor,D.frameW);
+    ctx.lineWidth=Math.max(1,D.frameW*0.45);ctx.strokeStyle=D.frameColor2;
+    P(D.frameW*1.8,Math.max(0,r-D.frameW*1.8));ctx.stroke();
+  }
+  else if(f==='gradient')ST(grad,D.frameW);
+  else if(f==='corner'){
+    ST(D.frameColor,Math.max(1,D.frameW*0.4));
+    var L=Math.min(w,h)*0.12,lw=D.frameW*1.4;
+    ctx.strokeStyle=D.frameColor2;ctx.lineWidth=lw;ctx.lineCap='round';
+    var pts=[[x,y,1,1],[x+w,y,-1,1],[x,y+h,1,-1],[x+w,y+h,-1,-1]];
+    pts.forEach(function(p){ctx.beginPath();ctx.moveTo(p[0]+p[2]*L,p[1]);ctx.lineTo(p[0],p[1]);ctx.lineTo(p[0],p[1]+p[3]*L);ctx.stroke();});
+  }
+  else if(f==='dots'){
+    ST(D.frameColor,Math.max(1,D.frameW*0.25));
+    ctx.fillStyle=D.frameColor2;
+    var step=Math.max(18,D.frameW*4),rr2=Math.max(2,D.frameW*0.55);
+    for(var px=x+step/2;px<x+w;px+=step){ctx.beginPath();ctx.arc(px,y,rr2,0,7);ctx.fill();ctx.beginPath();ctx.arc(px,y+h,rr2,0,7);ctx.fill();}
+    for(var py=y+step/2;py<y+h;py+=step){ctx.beginPath();ctx.arc(x,py,rr2,0,7);ctx.fill();ctx.beginPath();ctx.arc(x+w,py,rr2,0,7);ctx.fill();}
+  }
+  else if(f==='glow'){
+    ctx.shadowColor=D.frameColor2;ctx.shadowBlur=D.frameW*2.2;ST(grad,D.frameW);ctx.shadowBlur=0;
+  }
+  ctx.restore();
+}
+function draw(canvas,ls,fillC,mode,forceWhite){
+  var g=geom(),ctx=canvas.getContext('2d');
+  canvas.width=g.W;canvas.height=g.H;
+  ctx.clearRect(0,0,g.W,g.H);
+  paintBG(ctx,g,forceWhite);
+  paintFrameFill(ctx,g);
+  drawTitle(ctx,g);
+  drawSub(ctx,g);
+  drawButtons(ctx,g,ls,fillC,mode);
+  drawFrame(ctx,g);
+  return g;
+}
+
+/* ==================== 坐标 / 说明 ==================== */
+function coordText(){
+  var g=geom(),rs=rects(g),ls=getLabels(),out=[];
+  out.push('图片尺寸：'+g.W+' × '+g.H+' px');
+  out.push('每行 '+D.N+' 个 × '+D.R+' 行，共 '+rs.length+' 个热区（热区只框按钮，不要框标题/说明/外框）');
+  out.push('');
+  out.push('【当前设置】');
+  out.push('标题：'+(D.showTitle?D.titleText.replace(/\n/g,' / ')+'（'+D.titleStyle+'，'+D.titleSize+'px，'+D.titleColor+'）':'关'));
+  out.push('说明文字：'+(D.subText.replace(/\n/g,' / ')||'无')+'（'+D.subPos+'，'+D.subColor+'）');
+  out.push('按钮配色：'+pal().n+' / 版本：'+D.mode+' / 底色：'+D.bg+(D.bg==='custom'||D.bg==='gradient'?'（'+D.bgCustom+'）':''));
+  out.push('外框：'+FRAME_NAMES[D.frame]+' / '+D.frameW+'px / '+D.frameColor);
+  out.push('文字颜色：主 '+D.tc+'，按钮副标 '+D.tsub+'，标题 '+D.titleColor+'，说明 '+D.subColor);
+  out.push('按钮自定义图：'+(D.imgMode==='none'?'无':(D.imgMode==='single'?'统一图':'逐格图'))+' / '+D.imgFit);
+  out.push('');
+  out.push('序号\t文案\tx\ty\tw\th\t百分比(left,top,width,height)');
+  for(var i=0;i<rs.length;i++){
+    var q=rs[i],pct=[(q.x/g.W*100).toFixed(1),(q.y/g.H*100).toFixed(1),(q.w/g.W*100).toFixed(1),(q.h/g.H*100).toFixed(1)].join('%, ')+'%';
+    out.push((i+1)+'\t'+(ls[i]?ls[i].main:'')+'\t'+Math.round(q.x)+'\t'+Math.round(q.y)+'\t'+Math.round(q.w)+'\t'+Math.round(q.h)+'\t'+pct);
+  }
+  out.push('');
+  out.push('操作：多热区切图模块 → 上传 PNG → 添加热区 → 按上表拖框 → 每个热区单独设链接 → 保存 → 发布');
+  out.push('注意：标题/按钮文字/说明都做进图片，改字要重新导出上传；图片宽度须与后台要求一致。');
+  return out.join('\r\n');
+}
+
+/* ==================== 渲染 ==================== */
+function syncUI(){
+  document.querySelectorAll('[data-k]').forEach(function(el){
+    var k=el.dataset.k;if(!(k in D))return;
+    if(el.type==='checkbox')el.checked=!!D[k];
+    else if(el.type==='radio')el.checked=String(D[k])===String(el.value);
+    else if(el===document.activeElement&&(el.tagName==='TEXTAREA'||el.type==='text'))return;
+    else el.value=D[k];
+  });
+  document.querySelectorAll('[data-v]').forEach(function(el){var k=el.dataset.v;if(k in D)el.textContent=D[k];});
+  document.getElementById('zoomV').textContent=document.getElementById('zoom').value+'%';
+  var n=(IMG.single?1:0)+IMG.per.length;
+  document.getElementById('imgInfo').textContent=n?('已载入：统一图 '+(IMG.single?'1':'0')+' 张 / 逐格图 '+IMG.per.length+' 张'):'尚未上传图片';
+}
+function render(){
+  D.R=Math.max(1,Math.min(20,Math.round(Number(D.R)||1)));
+  var ls=getLabels(),g=geom(),cv=document.getElementById('pv');
+  draw(cv,ls,fillColor(),D.mode);
+  var z=Number(document.getElementById('zoom').value)/100;
+  cv.style.width=Math.round(g.W*z)+'px';cv.style.height=Math.round(g.H*z)+'px';
+  document.getElementById('mSize').textContent=g.W+' × '+g.H;
+  var ok=(g.H>=144&&g.H<=2400);
+  var chk=document.getElementById('mCheck');
+  chk.textContent=ok?'✓ 高度合规 144~2400':'✗ 高度需 144~2400';
+  chk.className='tag '+(ok?'ok':'warn');
+  var rs=rects(g);
+  document.getElementById('mCount').textContent=rs.length;
+  document.getElementById('mBW').textContent=Math.round(g.bw)+' px';
+  var tb=document.querySelector('#coordTab tbody'),html='';
+  for(var i=0;i<rs.length;i++){
+    var q=rs[i];
+    html+='<tr><td>'+(i+1)+'</td><td>'+esc(ls[i]?ls[i].main:'')+'</td><td>'+Math.round(q.x)+'</td><td>'+Math.round(q.y)+'</td><td>'+Math.round(q.w)+'</td><td>'+Math.round(q.h)+'</td><td>'+
+      (q.x/g.W*100).toFixed(1)+'%, '+(q.y/g.H*100).toFixed(1)+'%, '+(q.w/g.W*100).toFixed(1)+'%, '+(q.h/g.H*100).toFixed(1)+'%</td></tr>';
+  }
+  tb.innerHTML=html;
+  syncUI();
+  renderRecNow();
+}
+function fname(mode,palK,ext){var g=geom();return 'btnrow_N'+D.N+'R'+D.R+'_'+g.W+'x'+g.H+'_'+mode+'_'+palK+'.'+(ext||'png');}
+
+/* ==================== ZIP（store 模式，UTF-8 文件名） ==================== */
+var CRC=(function(){var t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(u8){var c=0xFFFFFFFF;for(var i=0;i<u8.length;i++)c=CRC[(c^u8[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zip(files){
+  var parts=[],central=[],off=0,enc=new TextEncoder();
+  function u16(v){return [v&255,(v>>8)&255];}
+  function u32(v){return [v&255,(v>>8)&255,(v>>16)&255,(v>>24)&255];}
+  files.forEach(function(f){
+    var name=enc.encode(f.name),data=f.data,c=crc32(data),t=new Date();
+    var dosT=((t.getHours()<<11)|(t.getMinutes()<<5)|(t.getSeconds()>>1))&0xFFFF;
+    var dosD=(((t.getFullYear()-1980)<<9)|((t.getMonth()+1)<<5)|t.getDate())&0xFFFF;
+    var local=[].concat([80,75,3,4],u16(20),u16(0x0800),u16(0),u16(dosT),u16(dosD),u32(c),u32(data.length),u32(data.length),u16(name.length),u16(0));
+    var lb=new Uint8Array(local.length+name.length+data.length);
+    lb.set(local,0);lb.set(name,local.length);lb.set(data,local.length+name.length);parts.push(lb);
+    var cd=[].concat([80,75,1,2],u16(20),u16(20),u16(0x0800),u16(0),u16(dosT),u16(dosD),u32(c),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off));
+    var cb=new Uint8Array(cd.length+name.length);cb.set(cd,0);cb.set(name,cd.length);central.push(cb);off+=lb.length;
+  });
+  var cLen=central.reduce(function(s,x){return s+x.length;},0);
+  var end=new Uint8Array([].concat([80,75,5,6],u16(0),u16(0),u16(files.length),u16(files.length),u32(cLen),u32(off),u16(0)));
+  return new Blob(parts.concat(central,[end]),{type:'application/zip'});
+}
+function utf8(s){return new TextEncoder().encode('\ufeff'+s);}
+
+/* ==================== 控件初始化 ==================== */
+function seg(id,key,opts){
+  var box=document.getElementById(id),h='';
+  opts.forEach(function(o){h+='<label><input type="radio" name="seg_'+key+'" data-k="'+key+'" value="'+o.v+'"><span>'+o.n+'</span></label>';});
+  box.innerHTML=h;
+}
+function opts(arr){return arr.map(function(o){return {v:o[0],n:o[1]};});}
+seg('segW','W',opts([[750,'750 手机'],[1440,'1440 PC'],[1920,'1920 宽']]));
+seg('segN','N',[2,3,4,5,6].map(function(v){return {v:v,n:v+' 个'};}));
+seg('segR','R',[1,2,3,4,5,6,8].map(function(v){return {v:v,n:v+' 行'};}));
+(function(){
+  var s=document.getElementById('selTitleStyle');s.innerHTML=TITLE_STYLES.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>';}).join('');
+  var f=document.getElementById('selTitleFont');f.innerHTML=opts([['hei','黑体'],['heavy','粗黑'],['round','圆体'],['song','宋体'],['kai','楷体']]).map(function(o){return '<option value="'+o.v+'">'+o.n+'</option>';}).join('');
+  var w=document.getElementById('selTitleWeight');w.innerHTML=opts([['900','特粗'],['700','粗'],['400','常规']]).map(function(o){return '<option value="'+o.v+'">'+o.n+'</option>';}).join('');
+})();
+seg('segTitleC','titleColor',opts([['#C8161D','深红'],['#E1251B','亮红'],['#FF7A29','橙'],['#2F6FED','蓝'],['#167A4A','绿'],['#262C3A','墨黑']]));
+seg('segTitleC2','titleColor2',opts([['#FF8A3D','橙'],['#FFD34E','金'],['#7EC8E3','浅蓝'],['#FFFFFF','白']]));
+seg('segTitleSC','titleStrokeC',opts([['#FFFFFF','白'],['#C8161D','红'],['#262C3A','墨'],['#FFD34E','金']]));
+seg('segTitleAlign','titleAlign',opts([['center','居中'],['left','左'],['right','右']]));
+seg('segSubPos','subPos',opts([['bottom','按钮下方'],['top','标题下方']]));
+seg('segSubC','subColor',opts([['#8A2A22','暗红'],['#C8161D','红'],['#6C7484','灰'],['#262C3A','墨黑'],['#FFFFFF','白']]));
+seg('segSubAlign','subAlign',opts([['center','居中'],['left','左'],['right','右']]));
+seg('segTC','tc',opts([['#C8161D','深红'],['#E1251B','亮红'],['#262C3A','墨黑'],['#FFFFFF','白字']]));
+seg('segTSub','tsub',opts([['#8A857C','灰'],['#C8161D','红'],['#6C7484','深灰'],['#FFFFFF','白']]));
+seg('segImgMode','imgMode',opts([['none','不插图'],['single','统一图'],['per','逐格图']]));
+seg('segImgFit','imgFit',opts([['cover','铺满裁切'],['contain','完整放入'],['stretch','拉伸铺满']]));
+seg('segMode','mode',opts([['fill','填充版'],['outline','边框版'],['both','填充+描边']]));
+seg('segBG','bg',opts([['transparent','透明'],['white','白底'],['cream','浅米'],['pink','浅粉'],['blue','浅蓝'],['custom','自定义'],['gradient','渐变']]));
+seg('segBGC','bgCustom',opts([['#FFF3F5','浅粉'],['#FFFFFF','白'],['#F6F3EC','米'],['#EFF5FC','浅蓝'],['#E8EFE7','豆青']]));
+seg('segBGDir','bgDir',opts([['v','竖向'],['h','横向'],['d','斜向']]));
+seg('segFrame','frame',FRAMES.map(function(k){return {v:k,n:FRAME_NAMES[k]};}));
+seg('segFrameC','frameColor',opts([['#E8A0AE','粉'],['#C8161D','红'],['#CFC6B6','米'],['#2F6FED','蓝'],['#167A4A','绿']]));
+(function(){
+  var box=document.getElementById('segPal'),h='';
+  PALS.forEach(function(p){h+='<label><input type="radio" name="seg_pal" data-k="pal" value="'+p.k+'"><span>'+p.n+'</span></label>';});
+  box.innerHTML=h;
+})();
+document.getElementById('labels').value=labelsRaw;
+document.getElementById('zoom').addEventListener('input',render);
+document.querySelectorAll('.card h3').forEach(function(h){h.addEventListener('click',function(){h.parentNode.classList.toggle('fold');});});
+
+/* 统一事件委托：所有 data-k 控件 */
+function applyEl(el){
+  var k=el.dataset.k;if(!k||!(k in D))return false;
+  if(el.type==='checkbox')D[k]=el.checked;
+  else if(el.type==='radio'){if(!el.checked)return false;D[k]=(typeof D[k]==='number')?Number(el.value):el.value;}
+  else if(el.type==='range'||el.type==='number')D[k]=Number(el.value);
+  else D[k]=el.value;
+  return true;
+}
+document.addEventListener('input',function(e){
+  if(e.target.id==='zoom')return;
+  if(e.target.id==='labels'){markDirty();save();render();return;}
+  if(applyEl(e.target)){markDirty();save();render();}
+});
+document.addEventListener('change',function(e){
+  if(applyEl(e.target)){markDirty();save();render();}
+});
+
+/* ==================== 图片上传 ==================== */
+function loadImg(file){
+  return new Promise(function(res){
+    var fr=new FileReader();
+    fr.onload=function(){var im=new Image();im.onload=function(){res(im);};im.onerror=function(){res(null);};im.src=fr.result;};
+    fr.onerror=function(){res(null);};fr.readAsDataURL(file);
+  });
+}
+function handleFiles(input,mode){
+  var fs=Array.prototype.slice.call(input.files||[]);if(!fs.length)return;
+  IMG_BUSY=Promise.all(fs.map(loadImg)).then(function(ims){
+    ims=ims.filter(Boolean);
+    if(!ims.length){toast('图片读取失败');return;}
+    if(mode==='single')IMG.single=ims[0];else IMG.per=ims;
+    D.imgMode=mode;markDirty();save();render();
+    toast('已载入 '+ims.length+' 张图片，按钮已自动适配');
+  });
+}
+document.getElementById('imgSingle').addEventListener('change',function(){handleFiles(this,'single');});
+document.getElementById('imgPer').addEventListener('change',function(){handleFiles(this,'per');});
+document.getElementById('imgClear').onclick=function(){
+  IMG={single:null,per:[]};D.imgMode='none';
+  document.getElementById('imgSingle').value='';document.getElementById('imgPer').value='';
+  markDirty();save();render();toast('图片已清除');
+};
+
+/* ==================== 导出 ==================== */
+document.getElementById('dlBtn').onclick=async function(){
+  await IMG_BUSY;
+  var cv=document.createElement('canvas');var g=draw(cv,getLabels(),fillColor(),D.mode);
+  dl(await toBlob(cv),fname(D.mode,D.pal));toast('已下载 '+g.W+'×'+g.H+' PNG');
+};
+document.getElementById('jpgBtn').onclick=async function(){
+  await IMG_BUSY;
+  var cv=document.createElement('canvas');var g=draw(cv,getLabels(),fillColor(),D.mode,true);
+  dl(await toBlob(cv,'image/jpeg'),fname(D.mode,D.pal,'jpg'));toast('已下载 JPG（自动补白底）');
+};
+document.getElementById('copyBtn').onclick=function(){
+  var t=coordText();
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).catch(function(){fallbackCopy(t);});else fallbackCopy(t);
+  toast('热区坐标已复制');
+};
+function fallbackCopy(t){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();}
+document.getElementById('txtBtn').onclick=function(){dl(new Blob([utf8(coordText())],{type:'text/plain'}),'热区坐标表.txt');toast('坐标表已下载');};
+document.getElementById('zipBtn').onclick=async function(){
+  var btn=this;btn.disabled=true;btn.textContent='打包中…';
+  try{
+    await IMG_BUSY;
+    var files=[],ls=getLabels(),oldPal=D.pal,oldMode=D.mode;
+    for(var pi=0;pi<4;pi++)for(var mi=0;mi<2;mi++){
+      var p=PALS[pi],m=mi===0?'fill':'outline';
+      var cv=document.createElement('canvas');draw(cv,ls,p.f,m);
+      var b=await toBlob(cv),ab=await b.arrayBuffer();
+      files.push({name:m+'/'+fname(m,p.k),data:new Uint8Array(ab)});
+    }
+    if(D.zipCur){
+      var cv2=document.createElement('canvas');draw(cv2,ls,fillColor(),D.mode);
+      var b2=await toBlob(cv2),ab2=await b2.arrayBuffer();
+      files.push({name:'当前设置/'+fname(D.mode,'current'),data:new Uint8Array(ab2)});
+    }
+    files.push({name:'说明.txt',data:utf8(coordText())});
+    dl(zip(files),'一行多按钮拼版_'+D.N+'个x'+D.R+'行_'+files.length+'个文件.zip');
+    toast('打包完成：'+(files.length-1)+' 张 PNG + 说明.txt');
+  }catch(e){toast('打包失败：'+e.message);}
+  btn.disabled=false;btn.textContent='批量打包（4 配色 × 2 版本 + 当前设置）';
+};
+
+/* ==================== 存档：记录 + 工程文件 + 可编辑 SVG ==================== */
+var REC_KEY='tb_btnrow_records_v1';
+var RECORDS=[];
+try{RECORDS=JSON.parse(localStorage.getItem(REC_KEY)||'[]');if(!Array.isArray(RECORDS))RECORDS=[];}catch(e){RECORDS=[];}
+var curRecId=null,recDirty=false;
+function markDirty(){if(curRecId)recDirty=true;}
+function stamp(){var d=new Date(),p=function(n){return(n<10?'0':'')+n;};return (d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function shrink(im,maxSide){
+  if(!im||!im.naturalWidth)return null;
+  try{
+    var iw=im.naturalWidth,ih=im.naturalHeight,s=Math.min(1,maxSide/Math.max(iw,ih));
+    var c=document.createElement('canvas');c.width=Math.max(1,Math.round(iw*s));c.height=Math.max(1,Math.round(ih*s));
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    return c.toDataURL('image/png');
+  }catch(e){return null;}
+}
+function thumbData(){
+  try{
+    var pv=document.getElementById('pv'),c=document.createElement('canvas'),w=300;
+    c.width=w;c.height=Math.max(1,Math.round(pv.height*w/pv.width));
+    var x=c.getContext('2d');x.fillStyle='#FFFFFF';x.fillRect(0,0,c.width,c.height);x.drawImage(pv,0,0,c.width,c.height);
+    return c.toDataURL('image/jpeg',0.75);
+  }catch(e){return null;}
+}
+function decodeImg(u){return new Promise(function(r){
+  if(!u)return r(null);
+  var im=new Image();im.onload=function(){r(im);};im.onerror=function(){r(null);};im.src=u;
+});}
+function restoreImgs(imgs){
+  imgs=imgs||{};
+  return Promise.all([decodeImg(imgs.single),Promise.all((imgs.per||[]).map(decodeImg))]).then(function(a){
+    IMG={single:a[0],per:a[1]};
+  });
+}
+function persistRecs(){
+  try{
+    localStorage.setItem(REC_KEY,JSON.stringify(RECORDS));
+    if(typeof CLOUD!=='undefined'&&CLOUD.auto&&!CLOUD_BUSY)autoCloud();
+    return true;
+  }
+  catch(e){toast('本地空间不足：先导出记录备份，再删掉几条旧记录');return false;}
+}
+function recSnapshot(name){
+  var g=geom();
+  return {
+    id:'r'+Date.now()+'_'+Math.floor(Math.random()*10000),
+    name:name||('方案 '+(RECORDS.length+1)),
+    at:stamp(),size:g.W+'×'+g.H,
+    params:JSON.parse(JSON.stringify(D)),
+    labels:document.getElementById('labels').value,
+    images:{single:shrink(IMG.single,360),per:IMG.per.map(function(im){return shrink(im,360);}).filter(Boolean)},
+    thumb:thumbData()
+  };
+}
+function findRec(id){var r=null;RECORDS.forEach(function(x){if(x.id===id)r=x;});return r;}
+function renderRecNow(){
+  var el=document.getElementById('recNow');if(!el)return;
+  var up=document.getElementById('recUpdate');if(up)up.disabled=!curRecId;
+  var rec=curRecId?findRec(curRecId):null;
+  if(!rec){el.className='recnow';el.innerHTML='<b>当前：临时编辑</b> · 尚未存为记录。调好后填名称点「保存为记录」，以后点它就能改。';}
+  else if(recDirty){el.className='recnow dirty';el.innerHTML='<b>当前记录：'+esc(rec.name)+'</b> · ● 有未保存的修改 → 点「更新当前记录」覆盖，或改个名称再「保存为记录」另存一条。';}
+  else{el.className='recnow';el.innerHTML='<b>当前记录：'+esc(rec.name)+'</b> · ✓ 已同步，直接只改变动的那几处文字 / 参数即可。';}
+}
+function renderRecords(){
+  var box=document.getElementById('recList');if(!box)return;
+  if(!RECORDS.length){box.innerHTML='<p class="hint">还没有记录。调好参数后填个名称，点「保存为记录」。</p>';return;}
+  var h='';
+  RECORDS.forEach(function(r){
+    var p=r.params||{},pn=(PALS.filter(function(x){return x.k===p.pal;})[0]||PALS[0]).n,fp=FRAME_NAMES[p.frame]||'无框';
+    var meta=[r.at,r.size,(p.N||4)+'个×'+(p.R||1)+'行',fp,pn,(p.showTitle?'有标题':'无标题')].join(' · ');
+    h+='<div class="recitem'+(r.id===curRecId?' cur':'')+'" data-id="'+r.id+'">'+
+       (r.thumb?'<img src="'+r.thumb+'" alt="">':'<div class="recnoimg">无预览</div>')+
+       '<div class="recinfo"><div class="recname">'+esc(r.name)+'</div><div class="recmeta">'+esc(meta)+'</div>'+
+       '<div class="recops">'+
+         '<button class="btn g s" data-act="load">载入修改</button>'+
+         '<button class="btn g s" data-act="update">用当前设置覆盖</button>'+
+         '<button class="btn g s" data-act="del">删除</button>'+
+       '</div></div></div>';
+  });
+  box.innerHTML=h;
+}
+async function loadRec(id,quiet){
+  var rec=findRec(id);if(!rec)return;
+  var p=rec.params||{};for(var k in D)if(p[k]!==undefined)D[k]=p[k];
+  document.getElementById('labels').value=rec.labels||'';
+  await restoreImgs(rec.images);
+  curRecId=id;recDirty=false;
+  document.getElementById('recName').value=rec.name;
+  save();render();renderRecords();
+  if(!quiet)toast('已载入「'+rec.name+'」，现在只改要改的地方');
+}
+function saveRec(){
+  var name=document.getElementById('recName').value.trim();
+  var rec=recSnapshot(name);
+  RECORDS.unshift(rec);
+  if(!persistRecs()){RECORDS.shift();return;}
+  curRecId=rec.id;recDirty=false;
+  document.getElementById('recName').value=rec.name;
+  renderRecords();renderRecNow();toast('已保存记录「'+rec.name+'」，点它可随时改');
+}
+function updateRec(id){
+  var rec=findRec(id);if(!rec)return;
+  var name=document.getElementById('recName').value.trim()||rec.name;
+  var fresh=recSnapshot(name);fresh.id=rec.id;fresh.at=stamp();
+  RECORDS[RECORDS.indexOf(rec)]=fresh;
+  if(!persistRecs())return;
+  curRecId=fresh.id;recDirty=false;
+  document.getElementById('recName').value=fresh.name;
+  renderRecords();renderRecNow();toast('记录「'+fresh.name+'」已更新');
+}
+function delRec(id){
+  var rec=findRec(id);if(!rec)return;
+  if(!window.confirm('删除记录「'+rec.name+'」？建议先导出备份，删除后不可恢复。'))return;
+  RECORDS=RECORDS.filter(function(r){return r.id!==id;});
+  persistRecs();
+  if(curRecId===id){curRecId=null;recDirty=false;}
+  renderRecords();renderRecNow();toast('已删除记录');
+}
+function importRecords(arr){
+  if(!Array.isArray(arr)||!arr.length)throw new Error('文件里没有记录');
+  var added=0;
+  arr.forEach(function(r){
+    if(!r||!r.params)return;
+    if(!r.id)r.id='r'+Date.now()+'_'+Math.floor(Math.random()*10000);
+    var idx=-1;RECORDS.forEach(function(x,i){if(x.id===r.id)idx=i;});
+    if(idx>=0)RECORDS[idx]=r;else RECORDS.push(r);
+    added++;
+  });
+  if(!persistRecs())return 0;
+  renderRecords();renderRecNow();return added;
+}
+function exportRecords(){
+  if(!RECORDS.length){toast('还没有记录可导出');return;}
+  var o={format:'tb-btnrow-records',version:1,exportedAt:new Date().toISOString(),records:RECORDS};
+  dl(new Blob([new TextEncoder().encode(JSON.stringify(o,null,2))],{type:'application/json;charset=utf-8'}),'方案记录备份_'+RECORDS.length+'条.json');
+  toast('已备份 '+RECORDS.length+' 条记录');
+}
+
+/* ---------- 可修改格式 1：工程文件 .json ---------- */
+function projectData(name){
+  var g=geom();
+  return {
+    format:'tb-btnrow-project',version:1,
+    name:name||'未命名方案',savedAt:new Date().toISOString(),size:g.W+'×'+g.H,
+    params:JSON.parse(JSON.stringify(D)),
+    labels:document.getElementById('labels').value,
+    images:{single:IMG.single?IMG.single.src:null,per:IMG.per.map(function(im){return im?im.src:null;}).filter(Boolean)},
+    coord:coordText(),thumb:thumbData()
+  };
+}
+function applyProject(o,alsoRecord){
+  if(!o||!o.params)throw new Error('不是有效的工程文件');
+  for(var k in D)if(o.params[k]!==undefined)D[k]=o.params[k];
+  document.getElementById('labels').value=o.labels||'';
+  return restoreImgs(o.images).then(function(){
+    save();render();
+    document.getElementById('recName').value=o.name||'';
+    if(alsoRecord)saveRec();
+  });
+}
+
+/* ---------- 可修改格式 2：可编辑 SVG（文字是 <text>） ---------- */
+function svgString(ls){
+  var g=geom(),rs=rects(g),S=[];
+  function n(v){return Math.round(v*10)/10;}
+  function E(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');}
+  function textEl(txt,x,y,size,fill,extra,role,fontF,weight,anchor,spacing){
+    return '<text x="'+n(x)+'" y="'+n(y)+'" font-family="'+fontF+'" font-size="'+size+'" font-weight="'+(weight||400)+
+      '" text-anchor="'+anchor+'" dominant-baseline="central" letter-spacing="'+spacing+'" fill="'+fill+'" '+(extra||'')+
+      ' data-role="'+role+'">'+E(txt)+'</text>';
+  }
+  var font=E(FONTS[D.titleFont]||FONTS.hei),bodyFont=E(FONTS.hei);
+  var mcx=document.createElement('canvas').getContext('2d');
+  mcx.font=D.titleWeight+' '+D.titleSize+'px '+(FONTS[D.titleFont]||FONTS.hei);
+  S.push('<?xml version="1.0" encoding="UTF-8"?>');
+  S.push('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="'+g.W+'" height="'+g.H+'" viewBox="0 0 '+g.W+' '+g.H+'">');
+  S.push('<!-- 可编辑文字：所有 <text> 之间的文字可直接修改；data-role 标明用途。改完请另存为 PNG 再上传淘宝。 -->');
+  S.push('<defs>');
+  if(D.bg==='gradient'){
+    var bd=D.bgDir;
+    S.push('<linearGradient id="bgGrad" x1="0" y1="0" x2="'+(bd==='v'?0:1)+'" y2="'+(bd==='h'?0:1)+'"><stop offset="0" stop-color="'+D.bgCustom+'"/><stop offset="1" stop-color="'+D.bgCustom2+'"/></linearGradient>');
+  }
+  g.titleLines.forEach(function(line,i){
+    var tw=Math.min(g.cb.w-20,mcx.measureText(line).width||D.titleSize);
+    var tx=D.titleAlign==='left'?g.cb.x0:(D.titleAlign==='right'?g.cb.x1-tw:g.cb.cx-tw/2);
+    S.push('<linearGradient id="titleGrad'+i+'" gradientUnits="userSpaceOnUse" x1="'+n(tx)+'" y1="0" x2="'+n(tx+tw)+'" y2="0"><stop offset="0" stop-color="'+D.titleColor+'"/><stop offset="1" stop-color="'+D.titleColor2+'"/></linearGradient>');
+  });
+  if(D.frame==='gradient'||D.frame==='glow')S.push('<linearGradient id="frameGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+D.frameColor+'"/><stop offset="1" stop-color="'+D.frameColor2+'"/></linearGradient>');
+  if(D.frame==='glow')S.push('<filter id="glowF" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="'+n(D.frameW*1.2)+'"/></filter>');
+  if(D.titleStyle==='neon')S.push('<filter id="neonF" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="'+n(D.titleSize*0.16)+'"/></filter>');
+  rs.forEach(function(q,i){
+    S.push('<clipPath id="btnClip'+i+'"><rect x="'+n(q.x)+'" y="'+n(q.y)+'" width="'+n(q.w)+'" height="'+n(q.h)+'" rx="'+n(Math.min(D.radius,q.w/2,q.h/2))+'"/></clipPath>');
+  });
+  S.push('</defs>');
+  if(D.bg!=='transparent'){
+    var bgc=D.bg==='custom'?D.bgCustom:(D.bg==='gradient'?'url(#bgGrad)':({white:'#FFFFFF',cream:'#F6F3EC',pink:'#FFF0F2',blue:'#EFF5FC'}[D.bg]||'#FFFFFF'));
+    S.push('<rect x="0" y="0" width="'+g.W+'" height="'+g.H+'" fill="'+bgc+'" opacity="'+(D.bgOpacity/100)+'"/>');
+  }
+  if(D.frame!=='none'&&D.frameFillOn){
+    var i0=D.frameInset;
+    S.push('<rect x="'+i0+'" y="'+i0+'" width="'+n(g.W-2*i0)+'" height="'+n(g.H-2*i0)+'" rx="'+n(D.frameRadius)+'" fill="'+D.frameFill+'"/>');
+  }
+  g.titleLines.forEach(function(line,i){
+    var y=g.top+D.titleSize*0.64+i*D.titleSize*1.28;
+    var x=D.titleAlign==='left'?g.cb.x0:(D.titleAlign==='right'?g.cb.x1:g.cb.cx);
+    var anchor=D.titleAlign==='left'?'start':(D.titleAlign==='right'?'end':'middle');
+    var fill=(D.titleStyle==='gradient'||D.titleStyle==='gradStroke')?'url(#titleGrad'+i+')':D.titleColor;
+    var ex='';
+    if(D.titleStrokeW>0&&(D.titleStyle==='outline'||D.titleStyle==='gradStroke'||D.titleStyle==='shadow'||D.titleStyle==='double'||D.titleStyle==='neon')){
+      var sw=D.titleStyle==='outline'?D.titleStrokeW:Math.min(D.titleStrokeW,3);
+      ex='stroke="'+D.titleStrokeC+'" stroke-width="'+n(sw)+'" paint-order="stroke fill" stroke-linejoin="round"';
+    }
+    if(D.titleStyle==='shadow'||D.titleStyle==='double'){
+      var off=D.titleStyle==='double'?Math.max(2,D.titleSize*0.045):Math.max(2,D.titleSize*0.055);
+      S.push(textEl(line,x+off,y+off,D.titleSize,D.titleColor2,'','title-shadow',font,D.titleWeight,anchor,D.titleSpacing));
+    }
+    if(D.titleStyle==='neon')S.push(textEl(line,x,y,D.titleSize,D.titleColor2,'filter="url(#neonF)"','title-glow',font,D.titleWeight,anchor,D.titleSpacing));
+    S.push(textEl(line,x,y,D.titleSize,fill,ex,'title',font,D.titleWeight,anchor,D.titleSpacing));
+  });
+  var y0=D.subPos==='top'?(g.top+g.titleH):(g.rowsTop+g.rowsH+D.subGap);
+  var sx=D.subAlign==='left'?g.cb.x0:(D.subAlign==='right'?g.cb.x1:g.cb.cx);
+  var sanchor=D.subAlign==='left'?'start':(D.subAlign==='right'?'end':'middle');
+  g.subLines.forEach(function(line,i){
+    S.push(textEl(line,sx,y0+D.subSize*0.75+i*D.subSize*1.5,D.subSize,D.subColor,'','subtitle',bodyFont,700,sanchor,0));
+  });
+  var fillC=fillColor();
+  rs.forEach(function(q,i){
+    var rx=n(Math.min(D.radius,q.w/2,q.h/2)),im=whichImg(i),hasImg=!!(im&&im.naturalWidth);
+    if((D.mode==='fill'||D.mode==='both')&&(!hasImg||D.imgKeepBg))
+      S.push('<rect x="'+n(q.x)+'" y="'+n(q.y)+'" width="'+n(q.w)+'" height="'+n(q.h)+'" rx="'+rx+'" fill="'+fillC+'"/>');
+    if(hasImg){
+      var par=D.imgFit==='cover'?'xMidYMid slice':(D.imgFit==='contain'?'xMidYMid meet':'none');
+      var cx=q.x+q.w/2,cy=q.y+q.h/2,k=D.imgScale/100;
+      S.push('<g clip-path="url(#btnClip'+i+')" opacity="'+(D.imgOpacity/100)+'"><g transform="translate('+n(cx)+' '+n(cy)+') scale('+n(k)+') translate('+n(-cx)+' '+n(-cy)+')">'+
+        '<image x="'+n(q.x)+'" y="'+n(q.y)+'" width="'+n(q.w)+'" height="'+n(q.h)+'" preserveAspectRatio="'+par+'" xlink:href="'+E(im.src)+'" href="'+E(im.src)+'"/></g></g>');
+    }
+    if((D.mode==='outline'||D.mode==='both')&&D.stroke>0)
+      S.push('<rect x="'+n(q.x)+'" y="'+n(q.y)+'" width="'+n(q.w)+'" height="'+n(q.h)+'" rx="'+rx+'" fill="none" stroke="'+lineColor()+'" stroke-width="'+D.stroke+'"/>');
+    if(D.showText){
+      var L=ls[i]||{main:'',sub:''},cx=q.x+q.w/2,cy=q.y+q.h/2,hs=!!L.sub;
+      S.push(textEl(L.main,cx,cy-(hs?D.fs*0.32:0),D.fs,D.tc,'','btn-main',bodyFont,700,'middle',0));
+      if(hs)S.push(textEl(L.sub,cx,cy+D.fs*0.72,D.fs2,D.tsub,'','btn-sub',bodyFont,400,'middle',0));
+    }
+  });
+  if(D.frame!=='none'){
+    var fi=D.frameInset,fx=fi,fy=fi,fw=g.W-2*fi,fh=g.H-2*fi,fr=n(Math.min(D.frameRadius,fw/2,fh/2));
+    var fbase='x="'+fx+'" y="'+fy+'" width="'+n(fw)+'" height="'+n(fh)+'" rx="'+fr+'"';
+    var fstroke=(D.frame==='gradient'||D.frame==='glow')?'url(#frameGrad)':D.frameColor;
+    var dash=D.frame==='dashed'?('stroke-dasharray="'+n(D.frameW*3)+' '+n(D.frameW*2)+'"'):
+             (D.frame==='dotted'?('stroke-dasharray="'+n(D.frameW*0.1)+' '+n(D.frameW*2.2)+'" stroke-linecap="round"'):'');
+    var flw=(D.frame==='corner'||D.frame==='dots')?Math.max(1,D.frameW*0.4):D.frameW;
+    S.push('<rect '+fbase+' fill="none" stroke="'+fstroke+'" stroke-width="'+n(flw)+'" '+dash+(D.frame==='glow'?' filter="url(#glowF)"':'')+'/>');
+    if(D.frame==='double')S.push('<rect x="'+n(fx+D.frameW*1.8)+'" y="'+n(fy+D.frameW*1.8)+'" width="'+n(fw-D.frameW*3.6)+'" height="'+n(fh-D.frameW*3.6)+'" rx="'+n(Math.max(0,D.frameRadius-D.frameW*1.8))+'" fill="none" stroke="'+D.frameColor2+'" stroke-width="'+n(Math.max(1,D.frameW*0.45))+'"/>');
+    if(D.frame==='corner'){
+      var L2=Math.min(fw,fh)*0.12;
+      [[fx,fy,1,1],[fx+fw,fy,-1,1],[fx,fy+fh,1,-1],[fx+fw,fy+fh,-1,-1]].forEach(function(p){
+        S.push('<path d="M '+n(p[0]+p[2]*L2)+' '+n(p[1])+' L '+n(p[0])+' '+n(p[1])+' L '+n(p[0])+' '+n(p[1]+p[3]*L2)+'" fill="none" stroke="'+D.frameColor2+'" stroke-width="'+n(D.frameW*1.4)+'" stroke-linecap="round"/>');
+      });
+    }
+    if(D.frame==='dots'){
+      var st=Math.max(18,D.frameW*4),dr=Math.max(2,D.frameW*0.55);
+      for(var px=fx+st/2;px<fx+fw;px+=st){S.push('<circle cx="'+n(px)+'" cy="'+n(fy)+'" r="'+n(dr)+'" fill="'+D.frameColor2+'"/>');S.push('<circle cx="'+n(px)+'" cy="'+n(fy+fh)+'" r="'+n(dr)+'" fill="'+D.frameColor2+'"/>');}
+      for(var py=fy+st/2;py<fy+fh;py+=st){S.push('<circle cx="'+n(fx)+'" cy="'+n(py)+'" r="'+n(dr)+'" fill="'+D.frameColor2+'"/>');S.push('<circle cx="'+n(fx+fw)+'" cy="'+n(py)+'" r="'+n(dr)+'" fill="'+D.frameColor2+'"/>');}
+    }
+  }
+  S.push('</svg>');
+  return S.join('\n');
+}
+
+/* ---------- 按钮绑定 ---------- */
+document.getElementById('recSave').onclick=saveRec;
+document.getElementById('recUpdate').onclick=function(){if(curRecId)updateRec(curRecId);else toast('请先点一条记录载入');};
+document.getElementById('recExport').onclick=exportRecords;
+document.getElementById('recImportBtn').onclick=function(){document.getElementById('recImportFile').click();};
+document.getElementById('recImportFile').addEventListener('change',function(){
+  var f=this.files[0];if(!f)return;var fr=new FileReader();
+  fr.onload=function(){
+    try{var o=JSON.parse(fr.result);var arr=Array.isArray(o)?o:(o.records||(o.format==='tb-btnrow-project'?[o]:[]));
+      toast('已导入 '+importRecords(arr)+' 条记录');}
+    catch(e){toast('导入失败：'+e.message);}
+  };
+  fr.readAsText(f);this.value='';
+});
+document.getElementById('recList').addEventListener('click',function(e){
+  var item=e.target.closest('.recitem');if(!item)return;
+  var btn=e.target.closest('[data-act]'),act=btn?btn.dataset.act:'load',id=item.dataset.id;
+  if(act==='load')loadRec(id);
+  else if(act==='update')updateRec(id);
+  else if(act==='del')delRec(id);
+});
+document.getElementById('projBtn').onclick=async function(){
+  await IMG_BUSY;
+  var name=document.getElementById('recName').value.trim()||'未命名方案';
+  dl(new Blob([new TextEncoder().encode(JSON.stringify(projectData(name),null,2))],{type:'application/json;charset=utf-8'}),'按钮拼版工程_'+name+'.json');
+  toast('工程文件已导出（含全部参数与自定义图）');
+};
+document.getElementById('projImportBtn').onclick=function(){document.getElementById('projFile').click();};
+document.getElementById('projFile').addEventListener('change',function(){
+  var f=this.files[0];if(!f)return;var fr=new FileReader();
+  fr.onload=function(){
+    try{
+      var o=JSON.parse(fr.result);
+      if(o.format==='tb-btnrow-records'&&o.records){toast('已导入 '+importRecords(o.records)+' 条记录');return;}
+      applyProject(o,true).then(function(){toast('工程文件已载入，并自动存为一条记录');});
+    }catch(e){toast('导入失败：'+e.message);}
+  };
+  fr.readAsText(f);this.value='';
+});
+document.getElementById('svgBtn').onclick=async function(){
+  await IMG_BUSY;
+  try{
+    var s=svgString(getLabels());
+    dl(new Blob([new TextEncoder().encode(s)],{type:'image/svg+xml;charset=utf-8'}),fname(D.mode,D.pal,'svg'));
+    toast('已导出可编辑 SVG：文字是文本，可直接改');
+  }catch(e){toast('SVG 导出失败：'+e.message);}
+};
+
+/* ==================== 云端方案库（Cloudflare Pages Functions + Workers KV） ==================== */
+var CLOUD_DEFAULT='https://tb-btnrow-tool.pages.dev';   /* 部署时替换为 Cloudflare Pages 站点地址 */
+var CLOUD_KEY='tb_btnrow_cloud_v1';
+var CLOUD={api:'',space:'',secret:'',auto:false,remember:false};
+try{var _cl=JSON.parse(localStorage.getItem(CLOUD_KEY)||'{}');for(var _ck in CLOUD)if(_cl[_ck]!==undefined)CLOUD[_ck]=_cl[_ck];}catch(e){}
+var CLOUD_BUSY=false;
+function persistCloud(){
+  try{
+    var o={api:CLOUD.api,space:CLOUD.space,auto:CLOUD.auto,remember:CLOUD.remember};
+    if(CLOUD.remember)o.secret=CLOUD.secret;
+    localStorage.setItem(CLOUD_KEY,JSON.stringify(o));
+  }catch(e){}
+}
+function cloudCfg(){
+  CLOUD.api=document.getElementById('cloudApi').value.trim();
+  CLOUD.space=document.getElementById('cloudSpace').value.trim();
+  CLOUD.secret=document.getElementById('cloudSecret').value;
+  CLOUD.auto=document.getElementById('cloudAuto').checked;
+  CLOUD.remember=document.getElementById('cloudRemember').checked;
+  persistCloud();
+}
+function cloudBase(){
+  var v=(document.getElementById('cloudApi').value||'').trim().replace(/\/+$/,'');
+  if(v)return v;
+  if(/\.pages\.dev$/i.test(location.host))return '';   /* 页面本身就部署在 Pages：同源直连 */
+  if(CLOUD_DEFAULT&&CLOUD_DEFAULT.charAt(0)!=='_')return CLOUD_DEFAULT;
+  return null;
+}
+function cloudUrl(){
+  var b=cloudBase();
+  if(b===null)throw new Error('请先填写云端 API 地址（Cloudflare Pages 站点网址）');
+  return (b||'')+'/api/records?space='+encodeURIComponent(CLOUD.space||'default');
+}
+function cloudNow(msg,bad){
+  var el=document.getElementById('cloudNow');if(!el)return;
+  el.className='recnow'+(bad?' dirty':'');el.innerHTML=msg;
+}
+function cloudReq(method,body){
+  var opt={method:method,headers:{'Content-Type':'application/json'}};
+  if(body!==undefined)opt.body=JSON.stringify(body);
+  return fetch(cloudUrl(),opt).then(function(r){
+    return r.text().then(function(t){
+      var j={};try{j=JSON.parse(t);}catch(e){}
+      if(!r.ok)throw new Error(j.error||('HTTP '+r.status));
+      return j;
+    });
+  });
+}
+function autoCloud(){
+  clearTimeout(window._autoCloudT);
+  window._autoCloudT=setTimeout(function(){cloudSave(true);},900);
+}
+async function cloudSave(silent){
+  cloudCfg();
+  try{
+    if(!silent)cloudNow('云端：正在上传…',true);
+    var j=await cloudReq('PUT',{records:RECORDS,secret:CLOUD.secret||''});
+    cloudNow('云端：<b>✓ 已同步</b> · '+RECORDS.length+' 条记录 · '+(j.updatedAt||'')+' · 方案库 <b>'+esc(CLOUD.space||'default')+'</b>');
+    if(!silent)toast('已保存 '+RECORDS.length+' 条记录到云端 KV');
+    return true;
+  }catch(e){cloudNow('云端：<b>✗ 保存失败</b> · '+esc(e.message),true);if(!silent)toast('云端保存失败：'+e.message);return false;}
+}
+async function cloudLoad(){
+  cloudCfg();
+  try{
+    cloudNow('云端：正在读取…',true);
+    var j=await cloudReq('GET');
+    var arr=j.records||[];
+    if(!arr.length){cloudNow('云端：方案库「'+esc(CLOUD.space||'default')+'」暂无记录',true);toast('云端还没有记录');return;}
+    CLOUD_BUSY=true;
+    var n=importRecords(arr);
+    CLOUD_BUSY=false;
+    cloudNow('云端：<b>✓ 已载入</b> · 云端 '+arr.length+' 条 / 合并后共 '+RECORDS.length+' 条 · '+(j.updatedAt||''));
+    toast('已从云端载入 '+n+' 条记录');
+  }catch(e){CLOUD_BUSY=false;cloudNow('云端：<b>✗ 读取失败</b> · '+esc(e.message),true);toast('云端读取失败：'+e.message);}
+}
+async function cloudTest(){
+  cloudCfg();
+  try{
+    cloudNow('云端：正在测试…',true);
+    var j=await cloudReq('GET');
+    cloudNow('云端：<b>✓ 连接正常</b> · 方案库「'+esc(CLOUD.space||'default')+'」现有 '+(j.records||[]).length+' 条记录'+(j.updatedAt?' · 上次更新 '+j.updatedAt:''));
+    toast('连接成功');
+  }catch(e){cloudNow('云端：<b>✗ 连接失败</b> · '+esc(e.message),true);toast('连接失败：'+e.message);}
+}
+document.getElementById('cloudSave').onclick=function(){cloudSave(false);};
+document.getElementById('cloudLoad').onclick=cloudLoad;
+document.getElementById('cloudTest').onclick=cloudTest;
+['cloudApi','cloudSpace','cloudSecret','cloudAuto','cloudRemember'].forEach(function(id){
+  document.getElementById(id).addEventListener('change',cloudCfg);
+});
+(function initCloud(){
+  document.getElementById('cloudApi').value=CLOUD.api||'';
+  document.getElementById('cloudSpace').value=CLOUD.space||'';
+  document.getElementById('cloudSecret').value=CLOUD.secret||'';
+  document.getElementById('cloudAuto').checked=!!CLOUD.auto;
+  document.getElementById('cloudRemember').checked=!!CLOUD.remember;
+  if(/\.pages\.dev$/i.test(location.host))cloudNow('云端：当前就是 Cloudflare Pages 站点，<b>同源直连</b>，无需填 API 地址');
+  else if(CLOUD_DEFAULT&&CLOUD_DEFAULT.charAt(0)!=='_')cloudNow('云端：默认连接 <b>'+esc(CLOUD_DEFAULT)+'</b>，可在上方修改');
+  else cloudNow('云端：请填写 API 地址（Cloudflare Pages 站点网址）');
+})();
+
+renderRecords();
+render();
+</script>
+</body>
+</html>
