@@ -38,6 +38,8 @@ input[type=color]{width:34px;height:30px;padding:1px;border:1px solid var(--line
 .seg label:has(input:checked){border-color:var(--blue);background:#EEF3FF}
 textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:13px/1.7 inherit;resize:vertical}
 .hint{color:var(--mute);font-size:12px;margin:2px 0 0;width:100%}
+.padread{background:#EEF3FF;border:1px solid #C9D9FF;border-radius:8px;padding:7px 10px;font-size:12px;color:#2F6FED;margin:0 0 9px;line-height:1.65}
+.padread b{color:#C8161D;font-size:13px}
 .chk{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
 .chk input{accent-color:var(--blue)}
 .btn{border:0;border-radius:8px;padding:9px 14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
@@ -100,7 +102,9 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
           <input type="number" data-k="R" id="rowCustom" min="1" max="20" step="1" title="自定义行数 1~20" style="width:62px">
           <span class="hint" style="width:auto">或直接输入 1~20 行</span></div>
         <div class="row"><span class="lb">按钮圆角 R</span><input type="range" data-k="radius" min="0" max="90" step="2"><span class="val" data-v="radius"></span></div>
-        <div class="row"><span class="lb">左右边距</span><input type="range" data-k="margin" min="0" max="140" step="4"><span class="val" data-v="margin"></span></div>
+        <div class="row"><span class="lb">左右边距</span><input type="range" data-k="margin" min="0" max="140" step="4"><span class="val" data-v="margin"></span>
+          <button class="btn g s" id="padFlush" title="把外框的离边距离与框内边距归零，让按钮真正贴边">↔ 一键贴边</button></div>
+        <div class="padread" id="padRead">—</div>
         <div class="row"><span class="lb">按钮间距</span><input type="range" data-k="gapX" min="0" max="90" step="2"><span class="val" data-v="gapX"></span></div>
         <div class="row"><span class="lb">按钮高度</span><input type="range" data-k="btnH" min="50" max="520" step="10"><span class="val" data-v="btnH"></span></div>
         <div class="row"><span class="lb">行间距</span><input type="range" data-k="gapY" min="0" max="90" step="2"><span class="val" data-v="gapY"></span></div>
@@ -188,7 +192,7 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
         <div class="row"><span class="lb">离边距离</span><input type="range" data-k="frameInset" min="0" max="60" step="2"><span class="val" data-v="frameInset"></span></div>
         <div class="row"><span class="lb">框内边距</span><input type="range" data-k="framePad" min="0" max="80" step="2"><span class="val" data-v="framePad"></span></div>
         <div class="row"><span class="lb">框内底色</span><input type="color" data-k="frameFill"><label class="chk"><input type="checkbox" data-k="frameFillOn">启用（留空＝透出整图底色）</label></div>
-        <p class="hint">外框会画在最上层，标题、按钮、说明都包在里面；框内边距会同步把内容往里收。</p>
+        <p class="hint">外框会画在最上层，标题、按钮、说明都包在里面。<b>注意：启用外框后，内容左右还会额外内收「离边距离 + 框内边距 + 边框粗细」三层留白，它们和「1 · 画布与排布」里的左右边距是<u>相加</u>关系</b>——所以左右边距设 0 仍可能有间距。想让按钮贴边，把这三项调小，或直接点卡片 1 的「↔ 一键贴边」；上方「实际左右留白」会实时显示总和。</p>
       </div></div>
 
       <div class="card" data-sec="8"><h3>8 · 导出</h3><div class="cbody">
@@ -317,7 +321,7 @@ var D={
  pal:'sand',mode:'fill',bg:'transparent',bgCustom:'#FFF3F5',bgCustom2:'#FFE0E6',bgDir:'v',bgOpacity:100,
  customFill:'#DDE8F0',strokeColor:'#C9A0A8',strokeCustom:false,stroke:6,
  frame:'none',frameColor:'#E8A0AE',frameColor2:'#C8161D',frameW:8,frameRadius:40,
- frameInset:10,framePad:24,frameFill:'#FFFFFF',frameFillOn:false,
+ frameInset:10,framePad:0,frameFill:'#FFFFFF',frameFillOn:false,
  zipCur:true
 };
 var STORE='tb_btnrow_v2';
@@ -589,6 +593,11 @@ function render(){
   var rs=rects(g);
   document.getElementById('mCount').textContent=rs.length;
   document.getElementById('mBW').textContent=Math.round(g.bw)+' px';
+  var pr=document.getElementById('padRead'),act=Math.round(rs.length?rs[0].x:0),ex=extraPad();
+  if(pr){
+    if(D.frame==='none')pr.innerHTML='实际左右留白 <b>'+act+' px</b>／侧 ＝ 左右边距 '+D.margin+'（未启用外框，无额外留白）';
+    else pr.innerHTML='实际左右留白 <b>'+act+' px</b>／侧 ＝ 左右边距 '+D.margin+' ＋ 外框额外 '+ex+'（离边 '+D.frameInset+' ＋ 框内 '+D.framePad+' ＋ 线宽 '+D.frameW+'）'+(ex>0?'　→ 点「↔ 一键贴边」去掉这部分':'');
+  }
   var tb=document.querySelector('#coordTab tbody'),html='';
   for(var i=0;i<rs.length;i++){
     var q=rs[i];
@@ -707,6 +716,13 @@ document.getElementById('imgClear').onclick=function(){
   IMG={single:null,per:[]};D.imgMode='none';
   document.getElementById('imgSingle').value='';document.getElementById('imgPer').value='';
   markDirty();save();render();toast('图片已清除');
+};
+document.getElementById('padFlush').onclick=function(){
+  if(D.frame==='none'){toast('当前未启用外框，左右边距已直接生效');return;}
+  var before=Math.round(rects(geom())[0].x);
+  D.framePad=0;D.frameInset=Math.max(0,Math.ceil(D.frameW/2));
+  markDirty();save();syncUI();render();
+  toast('已贴边：左右留白 '+before+'px → '+Math.round(rects(geom())[0].x)+'px（外框仍保留）');
 };
 
 /* ==================== 导出 ==================== */
