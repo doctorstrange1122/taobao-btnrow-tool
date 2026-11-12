@@ -90,7 +90,7 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
 <div class="wrap">
   <h1>一行多按钮拼版 · 整图 + 热区坐标</h1>
   <p class="sub">把「标题 + 一行多个按钮 + 说明」画进 <b>一张整图</b>，上传给「多热区切图」模块，按下方坐标框热区、逐个设链接。</p>
-  <div class="upd"><b>本次新增：</b>① 标题（7 种艺术字 + 任意颜色，位于按钮行上方）② 按钮可上传自定义图，按每行个数自动缩放 ③ 整图 8 种个性外框 + 颜色/粗细/圆角 ④ 独立「副标 / 说明文字」输入框，全部文字颜色可自定义 ⑤ 整图底色自定义色与渐变 ⑥ <b>方案记录</b>：存一条、点一下就恢复，只改要改的地方 ⑦ <b>可修改格式</b>：导出工程文件 .json（回到本工具继续改）和可编辑 SVG（文字是文本，可用矢量软件直接改字）⑧ <b>行数自定义 1~20 行</b> ⑨ <b>云端方案库</b>：方案记录同步到 Cloudflare KV，换电脑继续用。</div>
+  <div class="upd"><b>本次新增：</b>① 标题（7 种艺术字 + 任意颜色，位于按钮行上方）② 按钮可上传自定义图，按每行个数自动缩放 ③ 整图 8 种个性外框 + 颜色/粗细/圆角 ④ 独立「副标 / 说明文字」输入框，全部文字颜色可自定义 ⑤ 整图底色自定义色与渐变 ⑥ <b>方案记录</b>：存一条、点一下就恢复，只改要改的地方 ⑦ <b>可修改格式</b>：导出工程文件 .json（回到本工具继续改）和可编辑 SVG（文字是文本，可用矢量软件直接改字）⑧ <b>行数自定义 1~20 行</b> ⑨ <b>云端方案库</b>：方案记录同步到 Cloudflare KV，换电脑继续用 ⑩ <b>按钮主文字 / 副标分别设字间距</b>（−5~30px，支持负值收紧）⑪ 左右边距新增「实际留白」读数与「一键贴边」。</div>
 
   <div class="cols">
     <!-- 左：参数 -->
@@ -150,10 +150,12 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
 签到|元宝</textarea>
         <p class="hint">每行一个按钮：<code>主文案 | 小字副标</code>（副标可省略）。数量不足自动补「入口 N」。</p>
         <div class="row"><span class="lb">主文字号</span><input type="range" data-k="fs" min="20" max="110" step="2"><span class="val" data-v="fs"></span></div>
+        <div class="row"><span class="lb">主文字距</span><input type="range" data-k="btnSpacing" min="-5" max="30" step="1"><span class="val" data-v="btnSpacing"></span><span class="hint" style="width:auto">px</span></div>
         <div class="row"><span class="lb">副标字号</span><input type="range" data-k="fs2" min="12" max="64" step="2"><span class="val" data-v="fs2"></span></div>
+        <div class="row"><span class="lb">副标字距</span><input type="range" data-k="btnSpacing2" min="-5" max="30" step="1"><span class="val" data-v="btnSpacing2"></span><span class="hint" style="width:auto">px</span></div>
         <div class="row"><span class="lb">主文字色</span><input type="color" data-k="tc"><div class="seg" id="segTC"></div></div>
         <div class="row"><span class="lb">副标颜色</span><input type="color" data-k="tsub"><div class="seg" id="segTSub"></div></div>
-        <p class="hint">按钮副标（<code>|</code> 后面的小字）颜色也能自定义，不再固定灰色。</p>
+        <p class="hint">按钮副标（<code>|</code> 后面的小字）颜色也能自定义，不再固定灰色。<b>主文字与副标的字号、颜色、字间距各自独立</b>；字间距可填负值收紧，范围 −5~30px。字距过大使文字超出按钮宽度时会自动压窄，此时同步调小字号即可。</p>
       </div></div>
 
       <div class="card" data-sec="5"><h3>5 · 按钮自定义图（按每行个数自动缩放）</h3><div class="cbody">
@@ -316,7 +318,7 @@ var D={
  titleSpacing:2,titleAlign:'center',titleGap:30,
  subText:'① 每个入口只有 1 次机会　② 入口不显示肥料数量是正常的\n③ 部分号可能不到账，下完去看肥料明细',
  subPos:'bottom',subSize:28,subColor:'#8A2A22',subAlign:'center',subGap:22,
- showText:true,fs:46,fs2:26,tc:'#C8161D',tsub:'#8A857C',
+ showText:true,fs:46,fs2:26,btnSpacing:0,btnSpacing2:0,tc:'#C8161D',tsub:'#8A857C',
  imgMode:'none',imgFit:'cover',imgScale:100,imgOpacity:100,imgKeepBg:true,
  pal:'sand',mode:'fill',bg:'transparent',bgCustom:'#FFF3F5',bgCustom2:'#FFE0E6',bgDir:'v',bgOpacity:100,
  customFill:'#DDE8F0',strokeColor:'#C9A0A8',strokeCustom:false,stroke:6,
@@ -482,10 +484,17 @@ function drawButtons(ctx,g,ls,fillC,mode){
     // 文字
     if(D.showText){
       var L=ls[i]||{main:'',sub:''},cx=q.x+q.w/2,cy=q.y+q.h/2,hasSub=!!L.sub;
+      ctx.save();
       ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.font='700 '+D.fs+'px '+FONTS.hei;ctx.fillStyle=D.tc;
+      try{if('letterSpacing' in ctx)ctx.letterSpacing=(Number(D.btnSpacing)||0)+'px';}catch(e){}
       ctx.fillText(L.main,cx,cy-(hasSub?D.fs*0.32:0),q.w-20);
-      if(hasSub){ctx.font=D.fs2+'px '+FONTS.hei;ctx.fillStyle=D.tsub;ctx.fillText(L.sub,cx,cy+D.fs*0.72,q.w-20);}
+      if(hasSub){
+        ctx.font=D.fs2+'px '+FONTS.hei;ctx.fillStyle=D.tsub;
+        try{if('letterSpacing' in ctx)ctx.letterSpacing=(Number(D.btnSpacing2)||0)+'px';}catch(e){}
+        ctx.fillText(L.sub,cx,cy+D.fs*0.72,q.w-20);
+      }
+      ctx.restore();
     }
   }
 }
@@ -552,6 +561,7 @@ function coordText(){
   out.push('按钮配色：'+pal().n+' / 版本：'+D.mode+' / 底色：'+D.bg+(D.bg==='custom'||D.bg==='gradient'?'（'+D.bgCustom+'）':''));
   out.push('外框：'+FRAME_NAMES[D.frame]+' / '+D.frameW+'px / '+D.frameColor);
   out.push('文字颜色：主 '+D.tc+'，按钮副标 '+D.tsub+'，标题 '+D.titleColor+'，说明 '+D.subColor);
+  out.push('按钮文字：主 '+D.fs+'px／字距 '+(Number(D.btnSpacing)||0)+'px，副标 '+D.fs2+'px／字距 '+(Number(D.btnSpacing2)||0)+'px');
   out.push('按钮自定义图：'+(D.imgMode==='none'?'无':(D.imgMode==='single'?'统一图':'逐格图'))+' / '+D.imgFit);
   out.push('');
   out.push('序号\t文案\tx\ty\tw\th\t百分比(left,top,width,height)');
@@ -850,6 +860,7 @@ function renderRecords(){
 async function loadRec(id,quiet){
   var rec=findRec(id);if(!rec)return;
   var p=rec.params||{};for(var k in D)if(p[k]!==undefined)D[k]=p[k];
+  if(p.btnSpacing===undefined)D.btnSpacing=0;if(p.btnSpacing2===undefined)D.btnSpacing2=0;
   document.getElementById('labels').value=rec.labels||'';
   await restoreImgs(rec.images);
   curRecId=id;recDirty=false;
@@ -919,6 +930,7 @@ function projectData(name){
 function applyProject(o,alsoRecord){
   if(!o||!o.params)throw new Error('不是有效的工程文件');
   for(var k in D)if(o.params[k]!==undefined)D[k]=o.params[k];
+  if(o.params.btnSpacing===undefined)D.btnSpacing=0;if(o.params.btnSpacing2===undefined)D.btnSpacing2=0;
   document.getElementById('labels').value=o.labels||'';
   return restoreImgs(o.images).then(function(){
     save();render();
@@ -1006,8 +1018,8 @@ function svgString(ls){
       S.push('<rect x="'+n(q.x)+'" y="'+n(q.y)+'" width="'+n(q.w)+'" height="'+n(q.h)+'" rx="'+rx+'" fill="none" stroke="'+lineColor()+'" stroke-width="'+D.stroke+'"/>');
     if(D.showText){
       var L=ls[i]||{main:'',sub:''},cx=q.x+q.w/2,cy=q.y+q.h/2,hs=!!L.sub;
-      S.push(textEl(L.main,cx,cy-(hs?D.fs*0.32:0),D.fs,D.tc,'','btn-main',bodyFont,700,'middle',0));
-      if(hs)S.push(textEl(L.sub,cx,cy+D.fs*0.72,D.fs2,D.tsub,'','btn-sub',bodyFont,400,'middle',0));
+      S.push(textEl(L.main,cx,cy-(hs?D.fs*0.32:0),D.fs,D.tc,'','btn-main',bodyFont,700,'middle',(Number(D.btnSpacing)||0)));
+      if(hs)S.push(textEl(L.sub,cx,cy+D.fs*0.72,D.fs2,D.tsub,'','btn-sub',bodyFont,400,'middle',(Number(D.btnSpacing2)||0)));
     }
   });
   if(D.frame!=='none'){
