@@ -96,7 +96,8 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
     <!-- 左：参数 -->
     <div id="left">
       <div class="card" data-sec="1"><h3>1 · 画布与排布</h3><div class="cbody">
-        <div class="row"><span class="lb">画布宽度</span><div class="seg" id="segW"></div></div>
+        <div class="row"><span class="lb">画布宽度</span><div class="seg" id="segW"></div>
+          <button class="btn g s" id="wFix" title="淘宝 PC 端要求固定宽度 1440：一键切换并自动补足最小高度">↔ 设为 1440</button></div>
         <div class="row"><span class="lb">每行个数</span><div class="seg" id="segN"></div></div>
         <div class="row"><span class="lb">行数</span><div class="seg" id="segR"></div>
           <input type="number" data-k="R" id="rowCustom" min="1" max="20" step="1" title="自定义行数 1~20" style="width:62px">
@@ -109,7 +110,7 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
         <div class="row"><span class="lb">按钮高度</span><input type="range" data-k="btnH" min="50" max="520" step="10"><span class="val" data-v="btnH"></span></div>
         <div class="row"><span class="lb">行间距</span><input type="range" data-k="gapY" min="0" max="90" step="2"><span class="val" data-v="gapY"></span></div>
         <div class="row"><span class="lb">上下留白</span><input type="range" data-k="padY" min="0" max="180" step="4"><span class="val" data-v="padY"></span></div>
-        <p class="hint">按钮宽度 =（可用宽 − 间距）/ 每行个数，改「每行个数」时按钮与自定义图会自动等比缩放。<b>行数支持自定义 1~20 行</b>（上方数字框直接输入），快捷按钮给出常用值；行数多导致整图超过 2400px 时，调小「按钮高度」或拆成多张图。按钮高度最低 50px，调矮时记得同步调小文字字号和圆角；若提示「高度需 144~2400」，把上下留白调大一点即可凑够下限。</p>
+        <p class="hint">按钮宽度 =（可用宽 − 间距）/ 每行个数，改「每行个数」时按钮与自定义图会自动等比缩放。<b>行数支持自定义 1~20 行</b>（上方数字框直接输入），快捷按钮给出常用值；行数多导致整图超过 2400px 时，调小「按钮高度」或拆成多张图。按钮高度最低 50px，调矮时记得同步调小文字字号和圆角；若提示「高度需 144~2400」，把上下留白调大一点即可凑够下限。<br><b>PC 端「多热区切图」模块要求固定宽度 1440</b>（高度 144~2400、≤10MB）：请选「1440 PC」，750 只用于手机端、1920 也不行；导出后<b>不要再放大成 3000 宽</b>，否则后台会提示「含不符合比例要求的图片，请先进行裁剪」。<br>已有 3000 宽的旧图？<a href="1440.html" target="_blank" style="color:#C8161D;font-weight:700">打开「图片宽度一键转 1440」→</a>（等比缩放，不裁掉内容）。</p>
       </div></div>
 
       <div class="card" data-sec="2"><h3>2 · 标题（艺术字，位于按钮行上方）</h3><div class="cbody">
@@ -555,6 +556,7 @@ function draw(canvas,ls,fillC,mode,forceWhite){
 function coordText(){
   var g=geom(),rs=rects(g),ls=getLabels(),out=[];
   out.push('图片尺寸：'+g.W+' × '+g.H+' px');
+  out.push('⚠ 上传前核对：PC 端「多热区切图」要求固定宽度 1440，高度 144~2400，≤10MB —— 当前'+(g.W===1440?'宽度合规，可以使用':'宽度不合规（'+g.W+'），请点「↔ 设为 1440」后重新导出'));
   out.push('每行 '+D.N+' 个 × '+D.R+' 行，共 '+rs.length+' 个热区（热区只框按钮，不要框标题/说明/外框）');
   out.push('');
   out.push('【当前设置】');
@@ -599,11 +601,11 @@ function render(){
   draw(cv,ls,fillColor(),D.mode);
   var z=Number(document.getElementById('zoom').value)/100;
   cv.style.width=Math.round(g.W*z)+'px';cv.style.height=Math.round(g.H*z)+'px';
-  document.getElementById('mSize').textContent=g.W+' × '+g.H;
-  var ok=(g.H>=144&&g.H<=2400);
+  var okW=(g.W===1440),okH=(g.H>=144&&g.H<=2400);
+  document.getElementById('mSize').textContent=g.W+' × '+g.H+(okW?'':'（宽非 1440）');
   var chk=document.getElementById('mCheck');
-  chk.textContent=ok?'✓ 高度合规 144~2400':'✗ 高度需 144~2400';
-  chk.className='tag '+(ok?'ok':'warn');
+  chk.textContent=!okW?('✗ 宽度须 1440（当前 '+g.W+'）'):(okH?'✓ 尺寸合规 1440×'+g.H:'✗ 高度需 144~2400（当前 '+g.H+'）');
+  chk.className='tag '+((okW&&okH)?'ok':'warn');
   var rs=rects(g);
   document.getElementById('mCount').textContent=rs.length;
   document.getElementById('mBW').textContent=Math.round(g.bw)+' px';
@@ -740,12 +742,33 @@ document.getElementById('padFlush').onclick=function(){
 };
 
 /* ==================== 导出 ==================== */
+/* PC 端宽度防呆：淘宝「多热区切图」只认固定宽度 1440 */
+function applyPCWidth(){
+  D.W=1440;
+  var g=geom();
+  if(g.H<144)D.padY=Math.min(180,D.padY+Math.ceil((144-g.H)/2)+2);
+  save();syncUI();render();
+}
+function guardPC(){
+  if(D.W===1440)return;
+  if(window.confirm('当前画布宽度 '+D.W+' px，淘宝 PC 端「多热区切图」要求固定宽度 1440。\n上传后会被提示「含不符合比例要求的图片，请先进行裁剪」。\n\n点「确定」自动改成 1440 再导出；点「取消」仍按当前宽度导出（仅用于手机端等其他用途）。')){
+    applyPCWidth();
+  }else{
+    toast('仍按 '+D.W+' 宽导出：淘宝 PC 端会拒绝，请确认用途');
+  }
+}
+document.getElementById('wFix').onclick=function(){
+  var w0=D.W;applyPCWidth();var g=geom();
+  toast(w0===1440?('已是 1440，当前尺寸 '+g.W+'×'+g.H):('已改为 1440，当前尺寸 '+g.W+'×'+g.H));
+};
 document.getElementById('dlBtn').onclick=async function(){
+  guardPC();
   await IMG_BUSY;
   var cv=document.createElement('canvas');var g=draw(cv,getLabels(),fillColor(),D.mode);
   dl(await toBlob(cv),fname(D.mode,D.pal));toast('已下载 '+g.W+'×'+g.H+' PNG');
 };
 document.getElementById('jpgBtn').onclick=async function(){
+  guardPC();
   await IMG_BUSY;
   var cv=document.createElement('canvas');var g=draw(cv,getLabels(),fillColor(),D.mode,true);
   dl(await toBlob(cv,'image/jpeg'),fname(D.mode,D.pal,'jpg'));toast('已下载 JPG（自动补白底）');
@@ -758,6 +781,7 @@ document.getElementById('copyBtn').onclick=function(){
 function fallbackCopy(t){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();}
 document.getElementById('txtBtn').onclick=function(){dl(new Blob([utf8(coordText())],{type:'text/plain'}),'热区坐标表.txt');toast('坐标表已下载');};
 document.getElementById('zipBtn').onclick=async function(){
+  guardPC();
   var btn=this;btn.disabled=true;btn.textContent='打包中…';
   try{
     await IMG_BUSY;
