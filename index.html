@@ -91,6 +91,29 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
 .recname{font-weight:700;font-size:13.5px;word-break:break-all}
 .recmeta{color:var(--mute);font-size:11.5px;margin:2px 0 6px;line-height:1.5}
 .recops{display:flex;gap:6px;flex-wrap:wrap}
+/* 自由画布 · 预览拖拽叠层 */
+#pvWrap{position:relative;display:inline-block;line-height:0}
+#pvOverlay{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;line-height:1.4}
+.rbox{position:absolute;border:2px dashed #2F6FED;background:rgba(47,111,237,.07);box-sizing:border-box;pointer-events:auto;cursor:move}
+.rbox.cur{border-color:#C8161D;background:rgba(200,22,29,.10);box-shadow:0 0 0 2px rgba(200,22,29,.18)}
+.rbox .rno{position:absolute;left:-2px;top:-19px;background:#2F6FED;color:#fff;font-size:11px;padding:1px 6px;border-radius:4px 4px 0 0;white-space:nowrap}
+.rbox.cur .rno{background:#C8161D}
+.rbox .rh{position:absolute;right:-6px;bottom:-6px;width:12px;height:12px;background:#2F6FED;border:2px solid #fff;cursor:nwse-resize}
+#dragBox{position:absolute;border:2px dashed #167A4A;background:rgba(22,122,74,.10);pointer-events:none;display:none}
+.regionitem{border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:8px;background:#fff}
+.regionitem.cur{border-color:var(--blue);background:#F5F8FF;box-shadow:0 0 0 2px rgba(47,111,237,.10)}
+.regionitem .rh4{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:7px}
+.regionitem .rh4 b{font-size:12.5px;color:var(--blue)}
+.regionitem.cur .rh4 b{color:#C8161D}
+.regionitem input[type=number]{width:64px;padding:4px 6px;font-size:12px}
+.regionitem .mini{font-size:11.5px;color:var(--mute)}
+.rfield{display:flex;align-items:center;gap:7px;margin-bottom:6px;font-size:12px;color:var(--mute)}
+.rfield .rl{width:88px;flex:none}
+.rfield input[type=range]{flex:1;min-width:64px}
+.rfield input[type=color]{width:30px;height:26px}
+.rfield select{font-size:12px;padding:4px}
+.rfield .rv{width:34px;text-align:right;font-variant-numeric:tabular-nums;color:var(--mute)}
+.rfield input[type=text]{flex:1;min-width:80px;padding:4px 7px;font-size:12px}
 .fmt{background:#F7F9FD;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:12.5px;color:var(--mute);margin-top:8px;line-height:1.7}
 .fmt b{color:var(--ink)}
 </style>
@@ -99,7 +122,7 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
 <div class="wrap">
   <h1>一行多按钮拼版 · 整图 + 热区坐标</h1>
   <p class="sub">把「标题 + 一行多个按钮 + 说明」画进 <b>一张整图</b>，上传给「多热区切图」模块，按下方坐标框热区、逐个设链接。</p>
-  <div class="upd"><b>本次新增：</b>① 标题（7 种艺术字 + 任意颜色，位于按钮行上方）② 按钮可上传自定义图，按每行个数自动缩放 ③ 整图 8 种个性外框 + 颜色/粗细/圆角 ④ 独立「副标 / 说明文字」输入框，全部文字颜色可自定义 ⑤ 整图底色自定义色与渐变 ⑥ <b>方案记录</b>：存一条、点一下就恢复，只改要改的地方 ⑦ <b>可修改格式</b>：导出工程文件 .json（回到本工具继续改）和可编辑 SVG（文字是文本，可用矢量软件直接改字）⑧ <b>行数自定义 1~20 行</b> ⑨ <b>云端方案库</b>：方案记录同步到 Cloudflare KV，换电脑继续用 ⑩ <b>按钮主文字 / 副标分别设字间距</b>（−5~30px，支持负值收紧）⑪ 左右边距新增「实际留白」读数与「一键贴边」。</div>
+  <div class="upd"><b>本次新增：</b>① 标题（7 种艺术字 + 任意颜色，位于按钮行上方）② 按钮可上传自定义图，按每行个数自动缩放 ③ 整图 8 种个性外框 + 颜色/粗细/圆角 ④ 独立「副标 / 说明文字」输入框，全部文字颜色可自定义 ⑤ 整图底色自定义色与渐变 ⑥ <b>方案记录</b>：存一条、点一下就恢复，只改要改的地方 ⑦ <b>可修改格式</b>：导出工程文件 .json（回到本工具继续改）和可编辑 SVG（文字是文本，可用矢量软件直接改字）⑧ <b>行数自定义 1~20 行</b> ⑨ <b>云端方案库</b>：方案记录同步到 Cloudflare KV，换电脑继续用 ⑩ <b>按钮主文字 / 副标分别设字间距</b>（−5~30px，支持负值收紧）⑪ 左右边距新增「实际留白」读数与「一键贴边」。<br><b>⑫ 每个按钮下方对应文字</b>（卡片 4，逐按钮一行）⑬ <b>整图底图 / 横幅</b>：上传一张图铺满画布、画布高度可固定 ⑭ <b>自由画布</b>：在预览上任意拖框划区域，每块可设为「按钮」（现有按钮参数逐块独立可设）或「填充图片」。</div>
 
   <div class="cols">
     <!-- 左：参数 -->
@@ -119,6 +142,9 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
         <div class="row"><span class="lb">按钮高度</span><input type="range" data-k="btnH" min="50" max="520" step="10"><span class="val" data-v="btnH"></span></div>
         <div class="row"><span class="lb">行间距</span><input type="range" data-k="gapY" min="0" max="90" step="2"><span class="val" data-v="gapY"></span></div>
         <div class="row"><span class="lb">上下留白</span><input type="range" data-k="padY" min="0" max="180" step="4"><span class="val" data-v="padY"></span></div>
+        <div class="row"><span class="lb">画布高度</span><div class="seg" id="segCHMode"></div>
+          <input type="number" data-k="canvasH" min="144" max="2400" step="10" title="固定高度 144~2400 px" style="width:78px">
+          <span class="hint" style="width:auto">px · 做横幅选「固定」；固定高度小于内容时会裁掉底部，纯底图横幅请配合第 10 卡片的「只导出底图」</span></div>
         <p class="hint">按钮宽度 =（可用宽 − 间距）/ 每行个数，改「每行个数」时按钮与自定义图会自动等比缩放。<b>行数支持自定义 1~20 行</b>（上方数字框直接输入），快捷按钮给出常用值；行数多导致整图超过 2400px 时，调小「按钮高度」或拆成多张图。按钮高度最低 50px，调矮时记得同步调小文字字号和圆角；若提示「高度需 144~2400」，把上下留白调大一点即可凑够下限。<br><b>PC 端「多热区切图」模块要求固定宽度 1440</b>（高度 144~2400、≤10MB）：请选「1440 PC」，750 只用于手机端、1920 也不行；导出后<b>不要再放大成 3000 宽</b>，否则后台会提示「含不符合比例要求的图片，请先进行裁剪」。<br>已有 3000 宽的旧图？<a href="1440.html" target="_blank" style="color:#C8161D;font-weight:700">打开「图片宽度一键转 1440」→</a>（等比缩放，不裁掉内容）。</p>
       </div></div>
 
@@ -167,6 +193,15 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
         <div class="row"><span class="lb">主文字色</span><input type="color" data-k="tc"><div class="seg" id="segTC"></div></div>
         <div class="row"><span class="lb">副标颜色</span><input type="color" data-k="tsub"><div class="seg" id="segTSub"></div></div>
         <p class="hint">按钮副标（<code>|</code> 后面的小字）颜色也能自定义，不再固定灰色。<b>主文字与副标的字号、颜色、字间距各自独立</b>；字间距可填负值收紧，范围 −5~30px。字距过大使文字超出按钮宽度时会自动压窄，此时同步调小字号即可。<b>「主副间距」</b>调的是主文案与副标两行之间的上下距离：正值拉开、负值收紧，以两行中间为轴向上下均分，不改变原有居中布局，只对带副标的按钮生效；右侧实时显示两行基线距。间距过大可能超出按钮，请配合按钮高度调整。</p>
+
+        <div class="grp sep" style="margin-top:14px">④ 按钮下方文字<small>每行对应一个按钮</small></div>
+        <textarea id="belowLabels" rows="3" spellcheck="false" placeholder="每行一段，依次对应第 1、2、3… 个按钮；留空则不显示"></textarea>
+        <p class="hint">画在按钮<b>正下方（按钮外面）</b>，与按钮一一对应，留空＝不显示。<b>单行按钮时热区坐标完全不变</b>（只把画布加高）；多行时后续行会下移，请按新坐标表重新框热区。</p>
+        <div class="row"><span class="lb">下方字号</span><input type="range" data-k="belowFs" min="12" max="64" step="2"><span class="val" data-v="belowFs"></span></div>
+        <div class="row"><span class="lb">下方字距</span><input type="range" data-k="belowSpacing" min="-5" max="30" step="1"><span class="val" data-v="belowSpacing"></span></div>
+        <div class="row"><span class="lb">下方颜色</span><input type="color" data-k="belowColor"><div class="seg" id="segBelowC"></div></div>
+        <div class="row"><span class="lb">与按钮间距</span><input type="range" data-k="belowGap" min="0" max="80" step="2"><span class="val" data-v="belowGap"></span></div>
+        <div class="row"><span class="lb">对齐</span><div class="seg" id="segBelowAlign"></div></div>
       </div></div>
 
       <div class="card" data-sec="5"><h3>5 · 按钮自定义图（按每行个数自动缩放）</h3><div class="cbody">
@@ -265,6 +300,33 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
 
         <div class="fmt"><b>记录 vs 工程文件：</b>记录存在本浏览器里，随开随点、最方便，换电脑或清缓存会丢（可同步到上方云端方案库）；工程文件是独立 .json 文件，可备份、可发给别人、换设备用「导入工程文件」打开。<b>建议重要方案两个都留一份。</b></div>
       </div></div>
+
+      <div class="card" data-sec="10"><h3>10 · 自由画布 / 横幅（划区域 · 整图底图）</h3><div class="cbody">
+        <div class="grp">① 整图底图（做横幅）<small>铺满整张画布</small></div>
+        <div class="row"><label class="chk"><input type="checkbox" data-k="canvasImgOn">启用整图底图（图片做背景，内容叠在上方）</label></div>
+        <div class="filebox">
+          <div>上传底图（PNG / JPG）：<input type="file" id="canvasImgFile" accept="image/*"></div>
+          <div class="bar" style="margin-top:6px"><button class="btn g s" id="canvasImgClear">清除底图</button>
+            <span id="canvasImgInfo" style="color:var(--mute);align-self:center">尚未上传</span></div>
+        </div>
+        <div class="row" style="margin-top:8px"><span class="lb">填充方式</span><div class="seg" id="segCanvasFit"></div></div>
+        <div class="row"><span class="lb">底图不透明</span><input type="range" data-k="canvasImgOpacity" min="10" max="100" step="5"><span class="val" data-v="canvasImgOpacity"></span></div>
+        <p class="hint">底图画在最底层，网格按钮 / 自由区域 / 标题都会叠在它上面。<b>只想用一张图当横幅？</b>点下面的「🖼 只导出底图（纯横幅）」，再把「1 · 画布与排布」的<b>画布高度设为固定</b>（如 480），直接导出即可，画面上不会有任何按钮或文字。</p>
+
+        <div class="grp sep">② 自由划区域<small>在右侧预览图上拖框</small></div>
+        <div class="row"><label class="chk"><input type="checkbox" data-k="freeMode">启用自由画布模式（停用规则按钮网格，只画下面这些区域）</label></div>
+        <div class="bar">
+          <button class="btn p s" id="regionDraw">＋ 拖框新增区域</button>
+          <button class="btn g s" id="regionAddBtn">＋ 手动加按钮区域</button>
+          <button class="btn g s" id="regionAddImg">＋ 手动加图片区域</button>
+          <button class="btn g s" id="regionClear">清空区域</button>
+          <button class="btn g s" id="regionBannerOnly" title="清空所有区域并切到自由模式，画面只剩整图底图">🖼 只导出底图（纯横幅）</button>
+        </div>
+        <p class="hint" id="regionTip">开启自由模式后点「拖框新增区域」，在右侧预览图上按住鼠标拖出矩形即可新增；点区域框选中，拖动可移动，右下角小方块可缩放。也可在下面直接输入 x / y / w / h 精确定位。每个按钮区域都能单独设置现有全部按钮参数。</p>
+        <div id="regionList" style="margin-top:10px"></div>
+        <div id="regionPanel" style="margin-top:10px"></div>
+        <div class="fmt" style="margin-top:10px"><b>热区怎么框：</b>坐标表里的每一行就是一个区域，<b>按钮类型</b>区域照着 x/y/w/h 框热区设链接；<b>图片类型</b>区域只是装饰图，一般不用框。自由模式下画布高度固定（在卡片 1 设置），改区域位置不影响其它区域。</div>
+      </div></div>
     </div>
 
     <!-- 右：预览 -->
@@ -272,13 +334,13 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
       <div class="card pvcard">
         <h3>实时预览（导出为原尺寸，下方热区坐标按原尺寸）</h3>
         <div class="cbody">
-          <div class="pvbox"><canvas id="pv"></canvas></div>
+          <div class="pvbox"><div id="pvWrap"><canvas id="pv"></canvas><div id="pvOverlay"></div><div id="dragBox"></div></div></div>
           <div class="zoombar">预览缩放 <input type="range" id="zoom" min="30" max="100" step="5" value="50" style="max-width:180px"><span id="zoomV">50%</span></div>
           <div class="metrics">
             <span class="tag">导出尺寸 <b id="mSize">—</b></span>
             <span class="tag" id="mCheck">—</span>
-            <span class="tag">按钮数 <b id="mCount">—</b></span>
-            <span class="tag">按钮宽 <b id="mBW">—</b></span>
+            <span class="tag"><span id="mCountLb">按钮数</span> <b id="mCount">—</b></span>
+            <span class="tag"><span id="mBWLb">按钮宽</span> <b id="mBW">—</b></span>
           </div>
           <div class="goto1440" data-open1440 title="打开「图片宽度一键转 1440」">
             <b>上传提示尺寸不对？</b>
@@ -344,14 +406,30 @@ var D={
  customFill:'#DDE8F0',strokeColor:'#C9A0A8',strokeCustom:false,stroke:6,
  frame:'none',frameColor:'#E8A0AE',frameColor2:'#C8161D',frameW:8,frameRadius:40,
  frameInset:10,framePad:0,frameFill:'#FFFFFF',frameFillOn:false,
+ // 每个按钮下方的对应文字
+ belowFs:24,belowColor:'#6C7484',belowSpacing:0,belowGap:14,belowAlign:'center',
+ // 整图底图 / 横幅
+ canvasHMode:'auto',canvasH:480,canvasImgOn:false,canvasImgFit:'cover',canvasImgOpacity:100,
+ // 自由画布
+ freeMode:false,regions:[],
  zipCur:true
 };
+var DDEFAULT=JSON.parse(JSON.stringify(D));
 var STORE='tb_btnrow_v2';
 try{var raw=localStorage.getItem(STORE);if(raw){var o=JSON.parse(raw);for(var k in D)if(o[k]!==undefined)D[k]=o[k];}}catch(e){}
 var labels=[],labelsRaw='百补|5.7w\n秒杀|5.7w\n秒杀|4w\n签到|元宝';
 try{var sl=localStorage.getItem(STORE+'_labels');if(sl)labelsRaw=sl;}catch(e){}
+var belowRaw='';
+try{var bl=localStorage.getItem(STORE+'_below');if(bl)belowRaw=bl;}catch(e){}
 var IMG={single:null,per:[]},IMG_BUSY=Promise.resolve();
-function save(){try{localStorage.setItem(STORE,JSON.stringify(D));localStorage.setItem(STORE+'_labels',document.getElementById('labels').value);}catch(e){}}
+var CANVAS_IMG=null,REGION_IMGS={};   // 图片只放内存，随工程文件 / 记录单独存档，避免撑爆 localStorage
+function save(){
+  try{
+    localStorage.setItem(STORE,JSON.stringify(D));
+    localStorage.setItem(STORE+'_labels',document.getElementById('labels').value);
+    var b=document.getElementById('belowLabels');localStorage.setItem(STORE+'_below',b?b.value:belowRaw);
+  }catch(e){}
+}
 
 /* ==================== 工具函数 ==================== */
 function pal(){for(var i=0;i<PALS.length;i++)if(PALS[i].k===D.pal)return PALS[i];return PALS[0];}
@@ -378,27 +456,59 @@ function getLabels(){
   while(arr.length<D.N*D.R)arr.push({main:'入口 '+(arr.length+1),sub:''});
   labels=arr.slice(0,D.N*D.R);save();return labels;
 }
+function getBelow(){
+  var el=document.getElementById('belowLabels'),t=el?el.value.split('\n'):[],arr=[];
+  for(var i=0;i<t.length;i++)arr.push(t[i].trim());
+  while(arr.length<D.N*D.R)arr.push('');
+  return arr.slice(0,D.N*D.R);
+}
+function belowH(){
+  var el=document.getElementById('belowLabels');
+  if(!el||!el.value.trim())return 0;
+  return Math.round(Number(D.belowFs)*1.4+Number(D.belowGap)+4);
+}
+function regionP(r){
+  var p={};for(var k in D)p[k]=D[k];
+  if(r.p)for(var q in r.p)p[q]=r.p[q];
+  return p;
+}
+function newRegion(x,y,w,h,type){
+  return {id:'g'+Date.now()+'_'+Math.floor(Math.random()*10000),
+          x:Math.round(x),y:Math.round(y),w:Math.round(w),h:Math.round(h),
+          type:type||'button',main:'',sub:'',below:'',p:{}};
+}
 
 /* ==================== 几何 ==================== */
 function extraPad(){return D.frame!=='none'?(D.frameInset+D.framePad+D.frameW):0;}
 function geom(){
   var W=D.W,ex=extraPad(),top=ex+D.padY;
+  var cb={x0:ex+D.margin,x1:W-ex-D.margin,cx:W/2};cb.w=cb.x1-cb.x0;
+  if(D.freeMode){
+    var H=Math.max(144,Math.min(2400,Math.round(Number(D.canvasH)||480)));
+    return {W:W,H:H,bw:0,top:top,titleH:0,subTopH:0,rowsH:0,subH:0,subBotH:0,
+            titleLines:[],subLines:[],cb:cb,rowsTop:top,step:0};
+  }
   var tl=D.showTitle?lines(D.titleText):[];
   var titleH=tl.length?tl.length*D.titleSize*1.28+D.titleGap:0;
   var sl=lines(D.subText),subH=sl.length?sl.length*D.subSize*1.5:0;
   var subTopH=(D.subPos==='top'&&subH)?subH+D.subGap:0;
-  var rowsH=D.R*D.btnH+(D.R-1)*D.gapY;
+  var bh=belowH(),step=D.btnH+Math.max(D.gapY,bh);
+  /* 末行下方也要留出文字空间：单行时按钮 y 不变（热区坐标不动），只把画布加高 */
+  var rowsH=D.R*D.btnH+(D.R-1)*Math.max(D.gapY,bh)+bh;
   var subBotH=(D.subPos==='bottom'&&subH)?D.subGap+subH:0;
-  var H=Math.round(top+titleH+subTopH+rowsH+subBotH+D.padY+ex);
-  var cb={x0:ex+D.margin,x1:W-ex-D.margin,cx:W/2};cb.w=cb.x1-cb.x0;
+  H=Math.round(top+titleH+subTopH+rowsH+subBotH+D.padY+ex);
+  if(D.canvasHMode==='fixed')H=Math.max(144,Math.min(2400,Math.round(Number(D.canvasH)||480)));
   var bw=(cb.w-(D.N-1)*D.gapX)/D.N;
   return {W:W,H:H,bw:bw,top:top,titleH:titleH,subTopH:subTopH,rowsH:rowsH,subH:subH,subBotH:subBotH,
-          titleLines:tl,subLines:sl,cb:cb,rowsTop:top+titleH+subTopH};
+          titleLines:tl,subLines:sl,cb:cb,rowsTop:top+titleH+subTopH,step:step};
 }
 function rects(g){
-  var rs=[];
+  if(D.freeMode)return (D.regions||[]).map(function(r,i){
+    return {x:+r.x,y:+r.y,w:+r.w,h:+r.h,i:i,type:r.type,label:r.main||'',rid:r.id};
+  });
+  var rs=[],step=g.step||(D.btnH+Math.max(D.gapY,belowH()));
   for(var r=0;r<D.R;r++)for(var c=0;c<D.N;c++)
-    rs.push({x:g.cb.x0+c*(g.bw+D.gapX),y:g.rowsTop+r*(D.btnH+D.gapY),w:g.bw,h:D.btnH,i:r*D.N+c});
+    rs.push({x:g.cb.x0+c*(g.bw+D.gapX),y:g.rowsTop+r*step,w:g.bw,h:D.btnH,i:r*D.N+c});
   return rs;
 }
 
@@ -488,7 +598,7 @@ function whichImg(i){
   return null;
 }
 function drawButtons(ctx,g,ls,fillC,mode){
-  var rs=rects(g);
+  var rs=rects(g),bs=getBelow();
   for(var i=0;i<rs.length;i++){
     var q=rs[i],im=whichImg(i),hasImg=!!(im&&im.naturalWidth);
     // 底色
@@ -515,6 +625,16 @@ function drawButtons(ctx,g,ls,fillC,mode){
         try{if('letterSpacing' in ctx)ctx.letterSpacing=(Number(D.btnSpacing2)||0)+'px';}catch(e){}
         ctx.fillText(L.sub,cx,cy+D.fs*0.72+tgap,q.w-20);
       }
+      ctx.restore();
+    }
+    var bt=bs[i]||'';
+    if(bt){
+      ctx.save();
+      ctx.textAlign=D.belowAlign;ctx.textBaseline='middle';
+      ctx.font=D.belowFs+'px '+FONTS.hei;ctx.fillStyle=D.belowColor;
+      try{if('letterSpacing' in ctx)ctx.letterSpacing=(Number(D.belowSpacing)||0)+'px';}catch(e){}
+      var bx=D.belowAlign==='left'?q.x:(D.belowAlign==='right'?q.x+q.w:q.x+q.w/2);
+      ctx.fillText(bt,bx,q.y+q.h+D.belowGap+D.belowFs*0.5,q.w-10);
       ctx.restore();
     }
   }
@@ -557,15 +677,93 @@ function drawFrame(ctx,g){
   }
   ctx.restore();
 }
+/* ---------- 整图底图（横幅）：画在最底层 ---------- */
+function paintCanvasImg(ctx,g){
+  var im=CANVAS_IMG;
+  if(!D.canvasImgOn||!im||!im.naturalWidth)return;
+  var iw=im.naturalWidth,ih=im.naturalHeight,s;
+  ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,Number(D.canvasImgOpacity)/100));
+  if(D.canvasImgFit==='stretch'){ctx.drawImage(im,0,0,g.W,g.H);ctx.restore();return;}
+  if(D.canvasImgFit==='tile'){
+    for(var y=0;y<g.H;y+=ih)for(var x=0;x<g.W;x+=iw)ctx.drawImage(im,x,y);
+    ctx.restore();return;
+  }
+  s=(D.canvasImgFit==='contain')?Math.min(g.W/iw,g.H/ih):Math.max(g.W/iw,g.H/ih);
+  var dw=iw*s,dh=ih*s;
+  ctx.drawImage(im,(g.W-dw)/2,(g.H-dh)/2,dw,dh);
+  ctx.restore();
+}
+/* ---------- 自由区域绘制 ---------- */
+function imgFitRect(im,q,fit,scale){
+  var iw=im.naturalWidth,ih=im.naturalHeight,k=(Number(scale)||100)/100,s;
+  if(fit==='stretch')return {x:q.x,y:q.y,w:q.w,h:q.h};
+  s=(fit==='contain'?Math.min(q.w/iw,q.h/ih):Math.max(q.w/iw,q.h/ih))*k;
+  var dw=iw*s,dh=ih*s;
+  return {x:q.x+(q.w-dw)/2,y:q.y+(q.h-dh)/2,w:dw,h:dh};
+}
+function paintRegionImg(ctx,im,q,P,fit){
+  if(!im||!im.naturalWidth)return;
+  var r=imgFitRect(im,q,fit||'cover',P.imgScale);
+  ctx.save();
+  if(Number(P.radius)>0){rr(ctx,q.x,q.y,q.w,q.h,P.radius);ctx.clip();}
+  ctx.globalAlpha=Math.max(0,Math.min(1,Number(P.imgOpacity)/100));
+  ctx.drawImage(im,r.x,r.y,r.w,r.h);
+  ctx.restore();
+}
+function palObj(k){for(var i=0;i<PALS.length;i++)if(PALS[i].k===k)return PALS[i];return PALS[0];}
+function drawRegionButton(ctx,q,r,P){
+  var fillC=P.pal==='custom'?P.customFill:palObj(P.pal).f;
+  var lineC=P.strokeCustom?P.strokeColor:palObj(P.pal).l;
+  var im=REGION_IMGS[r.id],hasImg=!!(im&&im.naturalWidth);
+  if((P.mode==='fill'||P.mode==='both')&&(!hasImg||P.imgKeepBg)){
+    rr(ctx,q.x,q.y,q.w,q.h,P.radius);ctx.fillStyle=fillC;ctx.fill();
+  }
+  if(hasImg)paintRegionImg(ctx,im,q,P,r.imgFit||P.imgFit);
+  if((P.mode==='outline'||P.mode==='both')&&P.stroke>0){
+    rr(ctx,q.x,q.y,q.w,q.h,P.radius);ctx.lineWidth=P.stroke;ctx.strokeStyle=lineC;ctx.stroke();
+  }
+  if(P.showText){
+    var cx=q.x+q.w/2,cy=q.y+q.h/2,hs=!!r.sub,tgap=(Number(P.textGap)||0)/2;
+    ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='700 '+P.fs+'px '+FONTS.hei;ctx.fillStyle=P.tc;
+    try{if('letterSpacing' in ctx)ctx.letterSpacing=(Number(P.btnSpacing)||0)+'px';}catch(e){}
+    ctx.fillText(r.main||'',cx,cy-(hs?P.fs*0.32+tgap:0),q.w-20);
+    if(hs){
+      ctx.font=P.fs2+'px '+FONTS.hei;ctx.fillStyle=P.tsub;
+      try{if('letterSpacing' in ctx)ctx.letterSpacing=(Number(P.btnSpacing2)||0)+'px';}catch(e){}
+      ctx.fillText(r.sub,cx,cy+P.fs*0.72+tgap,q.w-20);
+    }
+    ctx.restore();
+  }
+  if(r.below){
+    ctx.save();ctx.textAlign=P.belowAlign;ctx.textBaseline='middle';
+    ctx.font=P.belowFs+'px '+FONTS.hei;ctx.fillStyle=P.belowColor;
+    try{if('letterSpacing' in ctx)ctx.letterSpacing=(Number(P.belowSpacing)||0)+'px';}catch(e){}
+    var bx=P.belowAlign==='left'?q.x:(P.belowAlign==='right'?q.x+q.w:q.x+q.w/2);
+    ctx.fillText(r.below,bx,q.y+q.h+P.belowGap+P.belowFs*0.5,q.w-10);
+    ctx.restore();
+  }
+}
+function drawRegions(ctx,g){
+  (D.regions||[]).forEach(function(r){
+    var q={x:+r.x,y:+r.y,w:+r.w,h:+r.h};
+    if(q.w<=0||q.h<=0)return;
+    if(r.type==='image'){
+      var im=REGION_IMGS[r.id],P=regionP(r);
+      if(im&&im.naturalWidth)paintRegionImg(ctx,im,q,P,r.imgFit||P.imgFit);
+      else{rr(ctx,q.x,q.y,q.w,q.h,P.radius);ctx.fillStyle='#EEF2F9';ctx.fill();}
+    }else drawRegionButton(ctx,q,r,regionP(r));
+  });
+}
 function draw(canvas,ls,fillC,mode,forceWhite){
   var g=geom(),ctx=canvas.getContext('2d');
   canvas.width=g.W;canvas.height=g.H;
   ctx.clearRect(0,0,g.W,g.H);
   paintBG(ctx,g,forceWhite);
+  paintCanvasImg(ctx,g);
   paintFrameFill(ctx,g);
-  drawTitle(ctx,g);
-  drawSub(ctx,g);
-  drawButtons(ctx,g,ls,fillC,mode);
+  if(D.freeMode)drawRegions(ctx,g);
+  else{drawTitle(ctx,g);drawSub(ctx,g);drawButtons(ctx,g,ls,fillC,mode);}
   drawFrame(ctx,g);
   return g;
 }
@@ -573,6 +771,22 @@ function draw(canvas,ls,fillC,mode,forceWhite){
 /* ==================== 坐标 / 说明 ==================== */
 function coordText(){
   var g=geom(),rs=rects(g),ls=getLabels(),out=[];
+  if(D.freeMode){
+    out.push('图片尺寸：'+g.W+' × '+g.H+' px（自由画布 / 横幅，高度固定）');
+    out.push('⚠ 上传前核对：PC 端「多热区切图」要求固定宽度 1440，高度 144~2400，≤10MB —— 当前'+(g.W===1440?'宽度合规，可以使用':'宽度不合规（'+g.W+'），请点「↔ 设为 1440」后重新导出'));
+    out.push('模式：自由画布，共 '+rs.length+' 个区域 —— 按钮类型区域才需要框热区，图片类型只是装饰');
+    out.push('整图底图：'+(D.canvasImgOn&&CANVAS_IMG?'已上传 / '+D.canvasImgFit:'无'));
+    out.push('');
+    out.push('序号\t类型\t文案\tx\ty\tw\th\t百分比(left,top,width,height)');
+    for(var fi=0;fi<rs.length;fi++){
+      var q=rs[fi],pct=[(q.x/g.W*100).toFixed(1),(q.y/g.H*100).toFixed(1),(q.w/g.W*100).toFixed(1),(q.h/g.H*100).toFixed(1)].join('%, ')+'%';
+      out.push((fi+1)+'\t'+(q.type==='image'?'图片':'按钮')+'\t'+(q.label||'')+'\t'+Math.round(q.x)+'\t'+Math.round(q.y)+'\t'+Math.round(q.w)+'\t'+Math.round(q.h)+'\t'+pct);
+    }
+    out.push('');
+    out.push('操作：多热区切图模块 → 上传 PNG → 添加热区 → 按上表拖框 → 每个热区单独设链接 → 保存 → 发布');
+    out.push('注意：区域文字 / 底图都做进图片，改内容要重新导出上传；改区域位置不影响其它区域。');
+    return out.join('\r\n');
+  }
   out.push('图片尺寸：'+g.W+' × '+g.H+' px');
   out.push('⚠ 上传前核对：PC 端「多热区切图」要求固定宽度 1440，高度 144~2400，≤10MB —— 当前'+(g.W===1440?'宽度合规，可以使用':'宽度不合规（'+g.W+'），请点「↔ 设为 1440」后重新导出'));
   out.push('每行 '+D.N+' 个 × '+D.R+' 行，共 '+rs.length+' 个热区（热区只框按钮，不要框标题/说明/外框）');
@@ -585,6 +799,7 @@ function coordText(){
   out.push('文字颜色：主 '+D.tc+'，按钮副标 '+D.tsub+'，标题 '+D.titleColor+'，说明 '+D.subColor);
   out.push('按钮文字：主 '+D.fs+'px／字距 '+(Number(D.btnSpacing)||0)+'px，副标 '+D.fs2+'px／字距 '+(Number(D.btnSpacing2)||0)+'px，主副间距 '+(Number(D.textGap)||0)+'px（两行基线距 '+Math.round(D.fs*1.04+(Number(D.textGap)||0))+'px）');
   out.push('按钮自定义图：'+(D.imgMode==='none'?'无':(D.imgMode==='single'?'统一图':'逐格图'))+' / '+D.imgFit);
+  out.push('按钮下方文字：'+(document.getElementById('belowLabels').value.trim()?'已设置（'+D.belowFs+'px，'+D.belowColor+'，与按钮间距 '+D.belowGap+'px）':'无')+' ｜ 整图底图：'+(D.canvasImgOn&&CANVAS_IMG?'已上传 / '+D.canvasImgFit:'无')+' ｜ 画布高度：'+(D.canvasHMode==='fixed'?'固定 '+g.H+'px':'随内容自动'));
   out.push('');
   out.push('序号\t文案\tx\ty\tw\th\t百分比(left,top,width,height)');
   for(var i=0;i<rs.length;i++){
@@ -625,21 +840,26 @@ function render(){
   chk.textContent=!okW?('✗ 宽度须 1440（当前 '+g.W+'）'):(okH?'✓ 尺寸合规 1440×'+g.H:'✗ 高度需 144~2400（当前 '+g.H+'）');
   chk.className='tag '+((okW&&okH)?'ok':'warn');
   var rs=rects(g);
+  document.getElementById('mCountLb').textContent=D.freeMode?'区域数':'按钮数';
+  document.getElementById('mBWLb').textContent=D.freeMode?'画布高':'按钮宽';
   document.getElementById('mCount').textContent=rs.length;
-  document.getElementById('mBW').textContent=Math.round(g.bw)+' px';
+  document.getElementById('mBW').textContent=(D.freeMode?g.H:Math.round(g.bw))+' px';
   var pr=document.getElementById('padRead'),act=Math.round(rs.length?rs[0].x:0),ex=extraPad();
   if(pr){
-    if(D.frame==='none')pr.innerHTML='实际左右留白 <b>'+act+' px</b>／侧 ＝ 左右边距 '+D.margin+'（未启用外框，无额外留白）';
+    if(D.freeMode)pr.innerHTML='自由画布模式：区域位置由各自的 x / y 决定，<b>改一块不影响其它块</b>；整张画布高 '+g.H+'px';
+    else if(D.frame==='none')pr.innerHTML='实际左右留白 <b>'+act+' px</b>／侧 ＝ 左右边距 '+D.margin+'（未启用外框，无额外留白）';
     else pr.innerHTML='实际左右留白 <b>'+act+' px</b>／侧 ＝ 左右边距 '+D.margin+' ＋ 外框额外 '+ex+'（离边 '+D.frameInset+' ＋ 框内 '+D.framePad+' ＋ 线宽 '+D.frameW+'）'+(ex>0?'　→ 点「↔ 一键贴边」去掉这部分':'');
   }
   var tb=document.querySelector('#coordTab tbody'),html='';
   for(var i=0;i<rs.length;i++){
-    var q=rs[i];
-    html+='<tr><td>'+(i+1)+'</td><td>'+esc(ls[i]?ls[i].main:'')+'</td><td>'+Math.round(q.x)+'</td><td>'+Math.round(q.y)+'</td><td>'+Math.round(q.w)+'</td><td>'+Math.round(q.h)+'</td><td>'+
+    var q=rs[i],nm=D.freeMode?((q.type==='image'?'[图片] ':'')+(q.label||'')):(ls[i]?ls[i].main:'');
+    html+='<tr><td>'+(i+1)+'</td><td>'+esc(nm)+'</td><td>'+Math.round(q.x)+'</td><td>'+Math.round(q.y)+'</td><td>'+Math.round(q.w)+'</td><td>'+Math.round(q.h)+'</td><td>'+
       (q.x/g.W*100).toFixed(1)+'%, '+(q.y/g.H*100).toFixed(1)+'%, '+(q.w/g.W*100).toFixed(1)+'%, '+(q.h/g.H*100).toFixed(1)+'%</td></tr>';
   }
   tb.innerHTML=html;
   syncUI();
+  drawOverlay();
+  if(!window.RP_BUSY)renderRegionPanel();
   renderRecNow();
 }
 function fname(mode,palK,ext){var g=geom();return 'btnrow_N'+D.N+'R'+D.R+'_'+g.W+'x'+g.H+'_'+mode+'_'+palK+'.'+(ext||'png');}
@@ -677,6 +897,7 @@ function opts(arr){return arr.map(function(o){return {v:o[0],n:o[1]};});}
 seg('segW','W',opts([[750,'750 手机'],[1440,'1440 PC'],[1920,'1920 宽']]));
 seg('segN','N',[2,3,4,5,6].map(function(v){return {v:v,n:v+' 个'};}));
 seg('segR','R',[1,2,3,4,5,6,8].map(function(v){return {v:v,n:v+' 行'};}));
+seg('segCHMode','canvasHMode',opts([['auto','自动'],['fixed','固定']]));
 (function(){
   var s=document.getElementById('selTitleStyle');s.innerHTML=TITLE_STYLES.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>';}).join('');
   var f=document.getElementById('selTitleFont');f.innerHTML=opts([['hei','黑体'],['heavy','粗黑'],['round','圆体'],['song','宋体'],['kai','楷体']]).map(function(o){return '<option value="'+o.v+'">'+o.n+'</option>';}).join('');
@@ -697,6 +918,9 @@ seg('segMode','mode',opts([['fill','填充版'],['outline','边框版'],['both',
 seg('segBG','bg',opts([['transparent','透明'],['white','白底'],['cream','浅米'],['pink','浅粉'],['blue','浅蓝'],['custom','自定义'],['gradient','渐变']]));
 seg('segBGC','bgCustom',opts([['#FFF3F5','浅粉'],['#FFFFFF','白'],['#F6F3EC','米'],['#EFF5FC','浅蓝'],['#E8EFE7','豆青']]));
 seg('segBGDir','bgDir',opts([['v','竖向'],['h','横向'],['d','斜向']]));
+seg('segBelowC','belowColor',opts([['#6C7484','灰'],['#C8161D','红'],['#262C3A','墨黑'],['#FFFFFF','白']]));
+seg('segBelowAlign','belowAlign',opts([['left','左'],['center','居中'],['right','右']]));
+seg('segCanvasFit','canvasImgFit',opts([['cover','铺满裁切'],['contain','完整放入'],['stretch','拉伸铺满'],['tile','平铺']]));
 seg('segFrame','frame',FRAMES.map(function(k){return {v:k,n:FRAME_NAMES[k]};}));
 seg('segFrameC','frameColor',opts([['#E8A0AE','粉'],['#C8161D','红'],['#CFC6B6','米'],['#2F6FED','蓝'],['#167A4A','绿']]));
 (function(){
@@ -705,6 +929,7 @@ seg('segFrameC','frameColor',opts([['#E8A0AE','粉'],['#C8161D','红'],['#CFC6B6
   box.innerHTML=h;
 })();
 document.getElementById('labels').value=labelsRaw;
+document.getElementById('belowLabels').value=belowRaw;
 document.getElementById('zoom').addEventListener('input',render);
 document.querySelectorAll('.card h3').forEach(function(h){h.addEventListener('click',function(){h.parentNode.classList.toggle('fold');});});
 
@@ -720,9 +945,24 @@ function applyEl(el){
 document.addEventListener('input',function(e){
   if(e.target.id==='zoom')return;
   if(e.target.id==='labels'){markDirty();save();render();return;}
+  if(e.target.id==='belowLabels'){markDirty();save();render();return;}
+  if(e.target.dataset.rk!==undefined){applyRegionEl(e.target);return;}
+  if(e.target.dataset.rn!==undefined){applyRegionNum(e.target);return;}
+  if(e.target.dataset.k==='freeMode'){
+    if(applyEl(e.target)){markDirty();save();render();}
+    selRegionId=null;drawMode=false;hideDrag();
+    var rb=document.getElementById('regionDraw');
+    if(rb){rb.classList.remove('r');rb.textContent='＋ 拖框新增区域';}
+    document.getElementById('pv').style.cursor='default';
+    renderRegionList();renderRegionPanel();
+    return;
+  }
   if(applyEl(e.target)){markDirty();save();render();}
 });
 document.addEventListener('change',function(e){
+  if(e.target.dataset.k==='freeMode')return;   /* input 事件里已完整处理 */
+  if(e.target.dataset.rk!==undefined){applyRegionEl(e.target);renderRegionList();return;}
+  if(e.target.dataset.rn!==undefined){applyRegionNum(e.target);return;}
   if(applyEl(e.target)){markDirty();save();render();}
 });
 
@@ -854,10 +1094,23 @@ function decodeImg(u){return new Promise(function(r){
   if(!u)return r(null);
   var im=new Image();im.onload=function(){r(im);};im.onerror=function(){r(null);};im.src=u;
 });}
+function regionImgsShrink(){var o={};(D.regions||[]).forEach(function(r){var im=REGION_IMGS[r.id];if(im)o[r.id]=shrink(im,480);});return o;}
+function regionImgsFull(){var o={};(D.regions||[]).forEach(function(r){var im=REGION_IMGS[r.id];if(im)o[r.id]=im.src;});return o;}
 function restoreImgs(imgs){
   imgs=imgs||{};
-  return Promise.all([decodeImg(imgs.single),Promise.all((imgs.per||[]).map(decodeImg))]).then(function(a){
+  var rk=Object.keys(imgs.regions||{});
+  return Promise.all([
+    decodeImg(imgs.single),
+    Promise.all((imgs.per||[]).map(decodeImg)),
+    decodeImg(imgs.canvas),
+    Promise.all(rk.map(function(k){return decodeImg(imgs.regions[k]).then(function(im){return [k,im];});}))
+  ]).then(function(a){
     IMG={single:a[0],per:a[1]};
+    CANVAS_IMG=a[2];
+    REGION_IMGS={};
+    a[3].forEach(function(p){if(p[1])REGION_IMGS[p[0]]=p[1];});
+    var ci=document.getElementById('canvasImgInfo');
+    if(ci)ci.textContent=CANVAS_IMG?('已载入 '+CANVAS_IMG.naturalWidth+'×'+CANVAS_IMG.naturalHeight):'尚未上传';
   });
 }
 function persistRecs(){
@@ -876,7 +1129,9 @@ function recSnapshot(name){
     at:stamp(),size:g.W+'×'+g.H,
     params:JSON.parse(JSON.stringify(D)),
     labels:document.getElementById('labels').value,
-    images:{single:shrink(IMG.single,360),per:IMG.per.map(function(im){return shrink(im,360);}).filter(Boolean)},
+    below:document.getElementById('belowLabels').value,
+    images:{single:shrink(IMG.single,360),per:IMG.per.map(function(im){return shrink(im,360);}).filter(Boolean),
+            canvas:CANVAS_IMG?shrink(CANVAS_IMG,720):null,regions:regionImgsShrink()},
     thumb:thumbData()
   };
 }
@@ -909,13 +1164,13 @@ function renderRecords(){
 }
 async function loadRec(id,quiet){
   var rec=findRec(id);if(!rec)return;
-  var p=rec.params||{};for(var k in D)if(p[k]!==undefined)D[k]=p[k];
-  if(p.btnSpacing===undefined)D.btnSpacing=0;if(p.btnSpacing2===undefined)D.btnSpacing2=0;if(p.textGap===undefined)D.textGap=0;
+  var p=rec.params||{};for(var k in DDEFAULT)D[k]=(p[k]!==undefined)?p[k]:JSON.parse(JSON.stringify(DDEFAULT[k]));
   document.getElementById('labels').value=rec.labels||'';
+  document.getElementById('belowLabels').value=rec.below||'';
   await restoreImgs(rec.images);
-  curRecId=id;recDirty=false;
+  curRecId=id;recDirty=false;selRegionId=null;drawMode=false;
   document.getElementById('recName').value=rec.name;
-  save();render();renderRecords();
+  save();render();renderRecords();renderRegionList();renderRegionPanel();
   if(!quiet)toast('已载入「'+rec.name+'」，现在只改要改的地方');
 }
 function saveRec(){
@@ -973,24 +1228,93 @@ function projectData(name){
     name:name||'未命名方案',savedAt:new Date().toISOString(),size:g.W+'×'+g.H,
     params:JSON.parse(JSON.stringify(D)),
     labels:document.getElementById('labels').value,
-    images:{single:IMG.single?IMG.single.src:null,per:IMG.per.map(function(im){return im?im.src:null;}).filter(Boolean)},
+    below:document.getElementById('belowLabels').value,
+    images:{single:IMG.single?IMG.single.src:null,per:IMG.per.map(function(im){return im?im.src:null;}).filter(Boolean),
+            canvas:CANVAS_IMG?CANVAS_IMG.src:null,regions:regionImgsFull()},
     coord:coordText(),thumb:thumbData()
   };
 }
 function applyProject(o,alsoRecord){
   if(!o||!o.params)throw new Error('不是有效的工程文件');
-  for(var k in D)if(o.params[k]!==undefined)D[k]=o.params[k];
-  if(o.params.btnSpacing===undefined)D.btnSpacing=0;if(o.params.btnSpacing2===undefined)D.btnSpacing2=0;if(o.params.textGap===undefined)D.textGap=0;
+  for(var k in DDEFAULT)D[k]=(o.params[k]!==undefined)?o.params[k]:JSON.parse(JSON.stringify(DDEFAULT[k]));
   document.getElementById('labels').value=o.labels||'';
+  document.getElementById('belowLabels').value=o.below||'';
+  selRegionId=null;drawMode=false;
   return restoreImgs(o.images).then(function(){
-    save();render();
+    save();render();renderRegionList();renderRegionPanel();
     document.getElementById('recName').value=o.name||'';
     if(alsoRecord)saveRec();
   });
 }
 
+/* ---------- 自由画布的可编辑 SVG ---------- */
+function svgFree(){
+  var g=geom(),rs=rects(g),S=[];
+  function n(v){return Math.round(v*10)/10;}
+  function E(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');}
+  function tEl(txt,x,y,size,fill,role,anchor,spacing,weight){
+    return '<text x="'+n(x)+'" y="'+n(y)+'" font-family="'+E(FONTS.hei)+'" font-size="'+size+'" font-weight="'+(weight||400)+
+      '" text-anchor="'+anchor+'" dominant-baseline="central" letter-spacing="'+spacing+'" fill="'+fill+'" data-role="'+role+'">'+E(txt)+'</text>';
+  }
+  S.push('<?xml version="1.0" encoding="UTF-8"?>');
+  S.push('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="'+g.W+'" height="'+g.H+'" viewBox="0 0 '+g.W+' '+g.H+'">');
+  S.push('<!-- 可编辑文字：所有 <text> 之间的文字可直接修改；data-role 标明用途。改完请另存为 PNG 再上传淘宝。 -->');
+  S.push('<defs>');
+  if(D.bg==='gradient')S.push('<linearGradient id="bgGrad" x1="0" y1="0" x2="'+(D.bgDir==='v'?0:1)+'" y2="'+(D.bgDir==='h'?0:1)+'"><stop offset="0" stop-color="'+D.bgCustom+'"/><stop offset="1" stop-color="'+D.bgCustom2+'"/></linearGradient>');
+  rs.forEach(function(q,i){
+    S.push('<clipPath id="regClip'+i+'"><rect x="'+n(q.x)+'" y="'+n(q.y)+'" width="'+n(q.w)+'" height="'+n(q.h)+'" rx="'+n(Math.min(regionP(D.regions[i]).radius,q.w/2,q.h/2))+'"/></clipPath>');
+  });
+  S.push('</defs>');
+  if(D.bg!=='transparent'){
+    var bgc=D.bg==='custom'?D.bgCustom:(D.bg==='gradient'?'url(#bgGrad)':({white:'#FFFFFF',cream:'#F6F3EC',pink:'#FFF0F2',blue:'#EFF5FC'}[D.bg]||'#FFFFFF'));
+    S.push('<rect x="0" y="0" width="'+g.W+'" height="'+g.H+'" fill="'+bgc+'" opacity="'+(D.bgOpacity/100)+'"/>');
+  }
+  if(D.canvasImgOn&&CANVAS_IMG&&CANVAS_IMG.naturalWidth){
+    var cr=imgFitRect(CANVAS_IMG,{x:0,y:0,w:g.W,h:g.H},D.canvasImgFit,100);
+    S.push('<image x="'+n(cr.x)+'" y="'+n(cr.y)+'" width="'+n(cr.w)+'" height="'+n(cr.h)+'" preserveAspectRatio="none" opacity="'+(D.canvasImgOpacity/100)+'" xlink:href="'+E(CANVAS_IMG.src)+'" href="'+E(CANVAS_IMG.src)+'" data-role="canvas-bg"/>');
+  }
+  (D.regions||[]).forEach(function(r,i){
+    var q=rs[i],P=regionP(r),rx=n(Math.min(P.radius,q.w/2,q.h/2)),im=REGION_IMGS[r.id];
+    if(r.type==='image'){
+      if(im&&im.naturalWidth){
+        var ir=imgFitRect(im,q,r.imgFit||P.imgFit,P.imgScale);
+        S.push('<g clip-path="url(#regClip'+i+')" opacity="'+(P.imgOpacity/100)+'"><image x="'+n(ir.x)+'" y="'+n(ir.y)+'" width="'+n(ir.w)+'" height="'+n(ir.h)+'" preserveAspectRatio="none" xlink:href="'+E(im.src)+'" href="'+E(im.src)+'"/></g>');
+      }else S.push('<rect x="'+n(q.x)+'" y="'+n(q.y)+'" width="'+n(q.w)+'" height="'+n(q.h)+'" rx="'+rx+'" fill="#EEF2F9"/>');
+      return;
+    }
+    var fillC=P.pal==='custom'?P.customFill:palObj(P.pal).f,lineC=P.strokeCustom?P.strokeColor:palObj(P.pal).l;
+    if((P.mode==='fill'||P.mode==='both')&&(!im||P.imgKeepBg))
+      S.push('<rect x="'+n(q.x)+'" y="'+n(q.y)+'" width="'+n(q.w)+'" height="'+n(q.h)+'" rx="'+rx+'" fill="'+fillC+'"/>');
+    if(im&&im.naturalWidth){
+      var ir2=imgFitRect(im,q,r.imgFit||P.imgFit,P.imgScale);
+      S.push('<g clip-path="url(#regClip'+i+')" opacity="'+(P.imgOpacity/100)+'"><image x="'+n(ir2.x)+'" y="'+n(ir2.y)+'" width="'+n(ir2.w)+'" height="'+n(ir2.h)+'" preserveAspectRatio="none" xlink:href="'+E(im.src)+'" href="'+E(im.src)+'"/></g>');
+    }
+    if((P.mode==='outline'||P.mode==='both')&&P.stroke>0)
+      S.push('<rect x="'+n(q.x)+'" y="'+n(q.y)+'" width="'+n(q.w)+'" height="'+n(q.h)+'" rx="'+rx+'" fill="none" stroke="'+lineC+'" stroke-width="'+P.stroke+'"/>');
+    if(P.showText){
+      var cx=q.x+q.w/2,cy=q.y+q.h/2,hs=!!r.sub,tg=(Number(P.textGap)||0)/2;
+      S.push(tEl(r.main||'',cx,cy-(hs?P.fs*0.32+tg:0),P.fs,P.tc,'btn-main','middle',(Number(P.btnSpacing)||0),700));
+      if(hs)S.push(tEl(r.sub,cx,cy+P.fs*0.72+tg,P.fs2,P.tsub,'btn-sub','middle',(Number(P.btnSpacing2)||0),400));
+    }
+    if(r.below){
+      var bx=P.belowAlign==='left'?q.x:(P.belowAlign==='right'?q.x+q.w:q.x+q.w/2);
+      var ba=P.belowAlign==='left'?'start':(P.belowAlign==='right'?'end':'middle');
+      S.push(tEl(r.below,bx,q.y+q.h+P.belowGap+P.belowFs*0.5,P.belowFs,P.belowColor,'btn-below',ba,(Number(P.belowSpacing)||0),400));
+    }
+  });
+  if(D.frame!=='none'){
+    var fi=D.frameInset,fw=g.W-2*fi,fh=g.H-2*fi,fr=n(Math.min(D.frameRadius,fw/2,fh/2));
+    var dash=D.frame==='dashed'?('stroke-dasharray="'+n(D.frameW*3)+' '+n(D.frameW*2)+'"'):
+             (D.frame==='dotted'?('stroke-dasharray="'+n(D.frameW*0.1)+' '+n(D.frameW*2.2)+'" stroke-linecap="round"'):'');
+    S.push('<rect x="'+fi+'" y="'+fi+'" width="'+n(fw)+'" height="'+n(fh)+'" rx="'+fr+'" fill="none" stroke="'+D.frameColor+'" stroke-width="'+D.frameW+'" '+dash+'/>');
+  }
+  S.push('</svg>');
+  return S.join('\n');
+}
+
 /* ---------- 可修改格式 2：可编辑 SVG（文字是 <text>） ---------- */
 function svgString(ls){
+  if(D.freeMode)return svgFree();
   var g=geom(),rs=rects(g),S=[];
   function n(v){return Math.round(v*10)/10;}
   function E(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');}
@@ -1026,6 +1350,10 @@ function svgString(ls){
     var bgc=D.bg==='custom'?D.bgCustom:(D.bg==='gradient'?'url(#bgGrad)':({white:'#FFFFFF',cream:'#F6F3EC',pink:'#FFF0F2',blue:'#EFF5FC'}[D.bg]||'#FFFFFF'));
     S.push('<rect x="0" y="0" width="'+g.W+'" height="'+g.H+'" fill="'+bgc+'" opacity="'+(D.bgOpacity/100)+'"/>');
   }
+  if(D.canvasImgOn&&CANVAS_IMG&&CANVAS_IMG.naturalWidth){
+    var cr=imgFitRect(CANVAS_IMG,{x:0,y:0,w:g.W,h:g.H},D.canvasImgFit,100);
+    S.push('<image x="'+n(cr.x)+'" y="'+n(cr.y)+'" width="'+n(cr.w)+'" height="'+n(cr.h)+'" preserveAspectRatio="none" opacity="'+(D.canvasImgOpacity/100)+'" xlink:href="'+E(CANVAS_IMG.src)+'" href="'+E(CANVAS_IMG.src)+'" data-role="canvas-bg"/>');
+  }
   if(D.frame!=='none'&&D.frameFillOn){
     var i0=D.frameInset;
     S.push('<rect x="'+i0+'" y="'+i0+'" width="'+n(g.W-2*i0)+'" height="'+n(g.H-2*i0)+'" rx="'+n(D.frameRadius)+'" fill="'+D.frameFill+'"/>');
@@ -1053,7 +1381,7 @@ function svgString(ls){
   g.subLines.forEach(function(line,i){
     S.push(textEl(line,sx,y0+D.subSize*0.75+i*D.subSize*1.5,D.subSize,D.subColor,'','subtitle',bodyFont,700,sanchor,0));
   });
-  var fillC=fillColor();
+  var fillC=fillColor(),bls=getBelow();
   rs.forEach(function(q,i){
     var rx=n(Math.min(D.radius,q.w/2,q.h/2)),im=whichImg(i),hasImg=!!(im&&im.naturalWidth);
     if((D.mode==='fill'||D.mode==='both')&&(!hasImg||D.imgKeepBg))
@@ -1070,6 +1398,12 @@ function svgString(ls){
       var L=ls[i]||{main:'',sub:''},cx=q.x+q.w/2,cy=q.y+q.h/2,hs=!!L.sub,tgap=(Number(D.textGap)||0)/2;
       S.push(textEl(L.main,cx,cy-(hs?D.fs*0.32+tgap:0),D.fs,D.tc,'','btn-main',bodyFont,700,'middle',(Number(D.btnSpacing)||0)));
       if(hs)S.push(textEl(L.sub,cx,cy+D.fs*0.72+tgap,D.fs2,D.tsub,'','btn-sub',bodyFont,400,'middle',(Number(D.btnSpacing2)||0)));
+    }
+    var bl2=bls[i]||'';
+    if(bl2){
+      var bx2=D.belowAlign==='left'?q.x:(D.belowAlign==='right'?q.x+q.w:q.x+q.w/2);
+      var ba2=D.belowAlign==='left'?'start':(D.belowAlign==='right'?'end':'middle');
+      S.push(textEl(bl2,bx2,q.y+q.h+D.belowGap+D.belowFs*0.5,D.belowFs,D.belowColor,'','btn-below',bodyFont,400,ba2,(Number(D.belowSpacing)||0)));
     }
   });
   if(D.frame!=='none'){
@@ -1096,6 +1430,277 @@ function svgString(ls){
   S.push('</svg>');
   return S.join('\n');
 }
+
+/* ==================== 自由画布：区域列表 / 参数 / 拖拽 ==================== */
+var selRegionId=null,drawMode=false,DRAG=null;
+window.RP_BUSY=false;
+function regionById(id){var r=null;(D.regions||[]).forEach(function(x){if(x.id===id)r=x;});return r;}
+var RFIELDS_BTN=[
+ {n:'外观',t:'title'},
+ {k:'radius',n:'圆角',t:'range',min:0,max:90,step:2},
+ {k:'pal',n:'配色',t:'select',opts:PALS.map(function(p){return [p.k,p.n];})},
+ {k:'customFill',n:'自定义填充',t:'color'},
+ {k:'mode',n:'版本',t:'select',opts:[['fill','填充版'],['outline','边框版'],['both','填充+描边']]},
+ {k:'stroke',n:'描边粗细',t:'range',min:0,max:24,step:1},
+ {k:'strokeColor',n:'描边色',t:'color'},
+ {k:'strokeCustom',n:'覆盖配色描边',t:'check'},
+ {k:'imgFit',n:'图片适配',t:'select',opts:[['cover','铺满裁切'],['contain','完整放入'],['stretch','拉伸铺满']]},
+ {k:'imgOpacity',n:'图片不透明',t:'range',min:10,max:100,step:5},
+ {k:'imgScale',n:'图片缩放%',t:'range',min:50,max:200,step:5},
+ {k:'imgKeepBg',n:'有图仍画底色',t:'check'},
+ {n:'文案',t:'title'},
+ {k:'main',n:'主文案',t:'text'},
+ {k:'sub',n:'小字副标',t:'text'},
+ {k:'below',n:'下方文字',t:'text'},
+ {k:'showText',n:'显示按钮文字',t:'check'},
+ {k:'fs',n:'主文字号',t:'range',min:20,max:110,step:2},
+ {k:'btnSpacing',n:'主文字距',t:'range',min:-5,max:30,step:1},
+ {k:'fs2',n:'副标字号',t:'range',min:12,max:64,step:2},
+ {k:'btnSpacing2',n:'副标字距',t:'range',min:-5,max:30,step:1},
+ {k:'textGap',n:'主副间距',t:'range',min:-40,max:100,step:2},
+ {k:'tc',n:'主文字色',t:'color'},
+ {k:'tsub',n:'副标颜色',t:'color'},
+ {k:'belowFs',n:'下方字号',t:'range',min:12,max:64,step:2},
+ {k:'belowSpacing',n:'下方字距',t:'range',min:-5,max:30,step:1},
+ {k:'belowColor',n:'下方颜色',t:'color'},
+ {k:'belowGap',n:'与按钮间距',t:'range',min:0,max:80,step:2},
+ {k:'belowAlign',n:'下方对齐',t:'select',opts:[['left','左'],['center','居中'],['right','右']]}
+];
+var RFIELDS_IMG=[
+ {n:'图片区域',t:'title'},
+ {k:'radius',n:'圆角',t:'range',min:0,max:90,step:2},
+ {k:'imgFit',n:'填充方式',t:'select',opts:[['cover','铺满裁切'],['contain','完整放入'],['stretch','拉伸铺满']]},
+ {k:'imgOpacity',n:'不透明',t:'range',min:10,max:100,step:5},
+ {k:'imgScale',n:'缩放%',t:'range',min:50,max:200,step:5}
+];
+function fieldHtml(f,val){
+  if(f.t==='title')return '<div class="grp sep" style="margin-top:10px">'+f.n+'<small>逐区域独立</small></div>';
+  var h='<div class="rfield"><span class="rl">'+f.n+'</span>';
+  if(f.t==='range')h+='<input type="range" data-rk="'+f.k+'" min="'+f.min+'" max="'+f.max+'" step="'+f.step+'" value="'+val+'"><span class="rv">'+val+'</span>';
+  else if(f.t==='color')h+='<input type="color" data-rk="'+f.k+'" value="'+val+'">';
+  else if(f.t==='check')h+='<label class="chk"><input type="checkbox" data-rk="'+f.k+'"'+(val?' checked':'')+'>启用</label>';
+  else if(f.t==='select')h+='<select data-rk="'+f.k+'">'+f.opts.map(function(o){return '<option value="'+o[0]+'"'+(String(val)===String(o[0])?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';
+  else if(f.t==='text')h+='<input type="text" data-rk="'+f.k+'" value="'+esc(val)+'">';
+  return h+'</div>';
+}
+function renderRegionList(){
+  var box=document.getElementById('regionList');if(!box)return;
+  if(!D.freeMode){box.innerHTML='<p class="hint">先勾选上面的「启用自由画布模式」，再划区域。</p>';return;}
+  if(!D.regions.length){box.innerHTML='<p class="hint">还没有区域。点上方「拖框新增区域」，在右侧预览图上拖出一个矩形。</p>';return;}
+  var h='';
+  D.regions.forEach(function(r,i){
+    h+='<div class="regionitem'+(r.id===selRegionId?' cur':'')+'" data-rid="'+r.id+'">'+
+      '<div class="rh4"><b>#'+(i+1)+' '+(r.type==='image'?'图片':'按钮')+'</b>'+
+      '<span class="mini">'+esc(r.main||r.below||'未填文案')+'</span>'+
+      '<button class="btn g s" data-rop="sel">选中</button>'+
+      '<button class="btn g s" data-rop="up">↑</button><button class="btn g s" data-rop="down">↓</button>'+
+      '<button class="btn g s" data-rop="dup">复制</button><button class="btn g s" data-rop="del">删除</button></div>'+
+      '<div class="rh4"><span class="mini">x</span><input type="number" data-rn="x" value="'+r.x+'">'+
+      '<span class="mini">y</span><input type="number" data-rn="y" value="'+r.y+'">'+
+      '<span class="mini">宽</span><input type="number" data-rn="w" value="'+r.w+'">'+
+      '<span class="mini">高</span><input type="number" data-rn="h" value="'+r.h+'"></div></div>';
+  });
+  box.innerHTML=h;
+}
+function renderRegionPanel(){
+  var box=document.getElementById('regionPanel');if(!box)return;
+  var r=regionById(selRegionId);
+  if(!r||!D.freeMode){box.innerHTML='';return;}
+  var P=regionP(r),h='<div class="grp sep" style="margin-top:12px">③ 选中区域 #'+(D.regions.indexOf(r)+1)+' 的参数<small>只影响这一块</small></div>';
+  h+='<div class="rfield"><span class="rl">区域类型</span><select data-rk="type">'+
+     '<option value="button"'+(r.type==='button'?' selected':'')+'>按钮（可框热区）</option>'+
+     '<option value="image"'+(r.type==='image'?' selected':'')+'>填充图片（装饰）</option></select></div>';
+  var rim=REGION_IMGS[r.id];
+  h+='<div class="filebox" style="margin:6px 0"><div>区域图片（按钮＝按钮底图；图片区域＝填充图）：<input type="file" id="regionImgFile" accept="image/*"></div>'+
+     '<div class="bar" style="margin-top:6px"><button class="btn g s" id="regionImgClear">清除该图</button>'+
+     '<span id="regionImgInfo" style="color:var(--mute);align-self:center">'+(rim?'已载入 '+rim.naturalWidth+'×'+rim.naturalHeight:'尚未上传')+'</span></div></div>';
+  (r.type==='image'?RFIELDS_IMG:RFIELDS_BTN).forEach(function(f){
+    if(f.t==='title'){h+=fieldHtml(f,'');return;}
+    var v=(f.k==='main'||f.k==='sub'||f.k==='below')?(r[f.k]||''):P[f.k];
+    if(v===undefined)v=f.t==='check'?false:'';
+    h+=fieldHtml(f,v);
+  });
+  h+='<p class="hint" style="margin-top:6px">没在这里改的参数自动跟随左侧全局设置；改过的只作用于当前区域。区域类型 / 文案也会写进坐标表和可编辑 SVG。</p>';
+  box.innerHTML=h;
+}
+function drawOverlay(){
+  var ov=document.getElementById('pvOverlay');if(!ov)return;
+  var z=Number(document.getElementById('zoom').value)/100;
+  ov.innerHTML='';
+  if(!D.freeMode)return;
+  (D.regions||[]).forEach(function(r,i){
+    var d=document.createElement('div');
+    d.className='rbox'+(r.id===selRegionId?' cur':'');
+    d.style.left=(+r.x*z)+'px';d.style.top=(+r.y*z)+'px';
+    d.style.width=(+r.w*z)+'px';d.style.height=(+r.h*z)+'px';
+    d.dataset.rid=r.id;
+    d.innerHTML='<span class="rno">#'+(i+1)+' '+(r.type==='image'?'图':'钮')+'</span><span class="rh" data-rh="1"></span>';
+    ov.appendChild(d);
+  });
+}
+function applyRegionEl(el){
+  var k=el.dataset.rk;if(k===undefined)return false;
+  var r=regionById(selRegionId);if(!r)return true;
+  var v=el.type==='checkbox'?el.checked:((el.type==='range'||el.type==='number')?Number(el.value):el.value);
+  if(k==='type')r.type=v;
+  else if(k==='main'||k==='sub'||k==='below')r[k]=v;
+  else{if(!r.p)r.p={};r.p[k]=v;}
+  var rv=el.parentNode.querySelector('.rv');if(rv)rv.textContent=v;
+  markDirty();save();
+  window.RP_BUSY=true;render();window.RP_BUSY=false;
+  return true;
+}
+function applyRegionNum(el){
+  var k=el.dataset.rn;if(!k)return false;
+  var item=el.closest('.regionitem');if(!item)return true;
+  var r=regionById(item.dataset.rid);if(!r)return true;
+  var v=Math.max(0,Math.round(Number(el.value)||0));
+  if(k==='w'||k==='h')v=Math.max(8,v);
+  r[k]=v;markDirty();save();render();
+  return true;
+}
+function evCoord(e){
+  var cv=document.getElementById('pv'),b=cv.getBoundingClientRect();
+  return {x:Math.max(0,Math.min(cv.width,(e.clientX-b.left)*cv.width/b.width)),
+          y:Math.max(0,Math.min(cv.height,(e.clientY-b.top)*cv.height/b.height))};
+}
+function showDrag(x,y,w,h){
+  var d=document.getElementById('dragBox'),z=Number(document.getElementById('zoom').value)/100;
+  if(!d)return;
+  d.style.display='block';d.style.left=(x*z)+'px';d.style.top=(y*z)+'px';
+  d.style.width=(w*z)+'px';d.style.height=(h*z)+'px';
+}
+function hideDrag(){var d=document.getElementById('dragBox');if(d)d.style.display='none';}
+function addRegion(type){
+  if(!D.freeMode){toast('请先启用自由画布模式');return;}
+  var g=geom(),n=D.regions.length,w=Math.round(g.W*0.28),h=Math.round(g.H*0.4);
+  var r=newRegion(20+n*30,20+n*20,w,h,type);
+  if(type==='button')r.main='按钮 '+(n+1);
+  D.regions.push(r);selRegionId=r.id;
+  save();render();renderRegionList();renderRegionPanel();
+}
+document.getElementById('regionDraw').onclick=function(){
+  if(!D.freeMode){toast('请先勾选「启用自由画布模式」');return;}
+  drawMode=!drawMode;
+  this.classList.toggle('r',drawMode);
+  this.textContent=drawMode?'✓ 请在预览图上拖框（再点取消）':'＋ 拖框新增区域';
+  document.getElementById('pv').style.cursor=drawMode?'crosshair':'default';
+  document.getElementById('regionTip').textContent=drawMode?
+    '拖框中：在右侧预览图上按住鼠标左键拖出矩形，松开即新增一个按钮区域；可继续拖下一个。':
+    '开启自由模式后点「拖框新增区域」，在预览图上拖框即可新增；点区域框选中，拖动移动，右下角小方块缩放。';
+};
+document.getElementById('regionAddBtn').onclick=function(){addRegion('button');};
+document.getElementById('regionAddImg').onclick=function(){addRegion('image');};
+document.getElementById('regionClear').onclick=function(){
+  if(!D.regions.length)return;
+  if(!window.confirm('清空全部 '+D.regions.length+' 个区域？'))return;
+  D.regions=[];REGION_IMGS={};selRegionId=null;
+  save();render();renderRegionList();renderRegionPanel();
+};
+document.getElementById('regionBannerOnly').onclick=function(){
+  D.freeMode=true;D.regions=[];REGION_IMGS={};selRegionId=null;drawMode=false;
+  if(D.canvasHMode!=='fixed')D.canvasHMode='fixed';
+  save();syncUI();render();renderRegionList();renderRegionPanel();
+  toast('纯底图横幅：上传底图、设好固定高度，直接导出即可');
+};
+document.getElementById('regionList').addEventListener('click',function(e){
+  var item=e.target.closest('.regionitem');if(!item)return;
+  var id=item.dataset.rid,op=e.target.dataset.rop;if(!op)return;
+  var idx=-1;D.regions.forEach(function(r,i){if(r.id===id)idx=i;});
+  if(op==='sel')selRegionId=id;
+  else if(op==='del'){D.regions.splice(idx,1);delete REGION_IMGS[id];if(selRegionId===id)selRegionId=null;}
+  else if(op==='up'&&idx>0){var t=D.regions[idx-1];D.regions[idx-1]=D.regions[idx];D.regions[idx]=t;}
+  else if(op==='down'&&idx<D.regions.length-1){var t2=D.regions[idx+1];D.regions[idx+1]=D.regions[idx];D.regions[idx]=t2;}
+  else if(op==='dup'){
+    var c=JSON.parse(JSON.stringify(D.regions[idx]));c.id='g'+Date.now()+'_'+Math.floor(Math.random()*10000);
+    c.x+=24;c.y+=24;D.regions.splice(idx+1,0,c);selRegionId=c.id;
+    if(REGION_IMGS[id])REGION_IMGS[c.id]=REGION_IMGS[id];
+  }
+  save();render();renderRegionList();renderRegionPanel();
+});
+document.getElementById('regionList').addEventListener('input',function(e){
+  if(e.target.dataset.rn!==undefined)applyRegionNum(e.target);
+});
+document.getElementById('regionPanel').addEventListener('click',function(e){
+  if(e.target.id==='regionImgClear'){delete REGION_IMGS[selRegionId];render();renderRegionPanel();}
+});
+document.getElementById('regionPanel').addEventListener('change',function(e){
+  if(e.target.id!=='regionImgFile'||!e.target.files||!e.target.files[0])return;
+  var id=selRegionId,f=e.target.files[0],fr=new FileReader();
+  fr.onload=function(){
+    var im=new Image();
+    im.onload=function(){
+      REGION_IMGS[id]=im;render();renderRegionPanel();
+      toast('区域图片已载入');
+    };
+    im.src=fr.result;
+  };
+  fr.readAsDataURL(f);e.target.value='';
+});
+document.getElementById('canvasImgFile').addEventListener('change',function(){
+  var f=this.files[0];if(!f)return;
+  var fr=new FileReader();
+  fr.onload=function(){
+    var im=new Image();
+    im.onload=function(){
+      CANVAS_IMG=im;D.canvasImgOn=true;syncUI();save();render();
+      document.getElementById('canvasImgInfo').textContent='已载入 '+im.naturalWidth+'×'+im.naturalHeight;
+      toast('整图底图已载入');
+    };
+    im.src=fr.result;
+  };
+  fr.readAsDataURL(f);this.value='';
+});
+document.getElementById('canvasImgClear').onclick=function(){
+  CANVAS_IMG=null;D.canvasImgOn=false;syncUI();save();render();
+  document.getElementById('canvasImgInfo').textContent='尚未上传';
+};
+document.getElementById('pv').addEventListener('mousedown',function(e){
+  if(!D.freeMode||!drawMode)return;
+  e.preventDefault();
+  var c=evCoord(e);DRAG={mode:'new',x0:c.x,y0:c.y};
+  showDrag(c.x,c.y,0,0);
+});
+document.getElementById('pvOverlay').addEventListener('mousedown',function(e){
+  if(!D.freeMode)return;
+  var box=e.target.closest('.rbox');if(!box)return;
+  e.preventDefault();e.stopPropagation();
+  var id=box.dataset.rid,r=regionById(id);if(!r)return;
+  selRegionId=id;renderRegionList();renderRegionPanel();drawOverlay();
+  var c=evCoord(e);
+  DRAG={mode:e.target.dataset.rh?'resize':'move',id:id,sx:c.x,sy:c.y,ox:r.x,oy:r.y,ow:r.w,oh:r.h};
+});
+window.addEventListener('mousemove',function(e){
+  if(!DRAG)return;
+  var c=evCoord(e);
+  if(DRAG.mode==='new')showDrag(Math.min(DRAG.x0,c.x),Math.min(DRAG.y0,c.y),Math.abs(c.x-DRAG.x0),Math.abs(c.y-DRAG.y0));
+  else{
+    var r=regionById(DRAG.id);if(!r)return;
+    if(DRAG.mode==='move'){
+      r.x=Math.max(0,Math.round(DRAG.ox+c.x-DRAG.sx));
+      r.y=Math.max(0,Math.round(DRAG.oy+c.y-DRAG.sy));
+    }else{
+      r.w=Math.max(8,Math.round(DRAG.ow+c.x-DRAG.sx));
+      r.h=Math.max(8,Math.round(DRAG.oh+c.y-DRAG.sy));
+    }
+    render();renderRegionList();
+  }
+});
+window.addEventListener('mouseup',function(e){
+  if(!DRAG)return;
+  if(DRAG.mode==='new'){
+    var c=evCoord(e),x=Math.min(DRAG.x0,c.x),y=Math.min(DRAG.y0,c.y),
+        w=Math.abs(c.x-DRAG.x0),h=Math.abs(c.y-DRAG.y0);
+    hideDrag();
+    if(w>=8&&h>=8){
+      var r=newRegion(x,y,w,h,'button');r.main='按钮 '+(D.regions.length+1);
+      D.regions.push(r);selRegionId=r.id;
+      save();render();renderRegionList();renderRegionPanel();
+      toast('已新增区域 #'+D.regions.length);
+    }
+  }else{save();render();renderRegionList();}
+  DRAG=null;
+});
 
 /* ---------- 按钮绑定 ---------- */
 document.getElementById('recSave').onclick=saveRec;
@@ -1249,6 +1854,7 @@ document.getElementById('cloudTest').onclick=cloudTest;
 
 renderRecords();
 render();
+renderRegionList();
 </script>
 </body>
 </html>
