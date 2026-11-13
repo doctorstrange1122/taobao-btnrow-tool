@@ -26,6 +26,11 @@ h1{font-size:24px;margin:0 0 4px}
 .card.fold .cbody{display:none}
 .row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .lb{width:78px;flex:none;color:var(--mute);font-size:13px}
+.grp{display:flex;align-items:center;gap:8px;margin:0 0 10px;padding:6px 10px;background:#F2F6FE;border-radius:8px;font-size:12.5px;font-weight:700;color:#2F6FED}
+.grp::before{content:'';width:3px;height:13px;background:var(--blue);border-radius:2px;flex:none}
+.grp small{font-weight:400;color:var(--mute);font-size:11.5px;margin-left:auto}
+.grp.sep{margin-top:17px;position:relative}
+.grp.sep::after{content:'';position:absolute;left:0;right:0;top:-9px;height:1px;background:var(--line)}
 input[type=text],input[type=number],input[type=password],select{border:1px solid var(--line);border-radius:7px;padding:6px 9px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink)}
 input[type=number]{width:78px}
 input[type=range]{flex:1;min-width:88px;accent-color:var(--blue)}
@@ -178,17 +183,20 @@ code{background:#F2F5FA;border-radius:4px;padding:1px 5px;font-size:12px}
         <p class="hint">图片会按当前按钮宽高自动铺入并裁圆角；改「每行个数」后自动跟着变大/变小。图片会随「方案记录」和「工程文件」一起保存；未存档的临时编辑刷新后需重新上传。</p>
       </div></div>
 
-      <div class="card" data-sec="6"><h3>6 · 配色与版本（底色可自定义 / 渐变）</h3><div class="cbody">
+      <div class="card" data-sec="6"><h3>6 · 配色与版本（按钮配色 / 整图底色）</h3><div class="cbody">
+        <div class="grp">① 按钮配色与描边<small>作用于每个按钮</small></div>
         <div class="row"><span class="lb">按钮配色</span><div class="seg" id="segPal"></div></div>
+        <div class="row"><span class="lb">自定义填充</span><input type="color" data-k="customFill"><span class="hint" style="width:auto">按钮配色选「自定义」时生效</span></div>
         <div class="row"><span class="lb">版本</span><div class="seg" id="segMode"></div></div>
+        <div class="row"><span class="lb">按钮描边色</span><input type="color" data-k="strokeColor"><label class="chk"><input type="checkbox" data-k="strokeCustom">覆盖配色描边</label></div>
+        <div class="row"><span class="lb">描边粗细</span><input type="range" data-k="stroke" min="0" max="24" step="1"><span class="val" data-v="stroke"></span></div>
+
+        <div class="grp sep">② 整图底色<small>作用于整张画布</small></div>
         <div class="row"><span class="lb">整图底色</span><div class="seg" id="segBG"></div></div>
         <div class="row"><span class="lb">自定义底色</span><input type="color" data-k="bgCustom"><div class="seg" id="segBGC"></div></div>
         <div class="row"><span class="lb">渐变第二色</span><input type="color" data-k="bgCustom2"><span class="hint" style="width:auto">选「渐变」时生效</span></div>
         <div class="row"><span class="lb">渐变方向</span><div class="seg" id="segBGDir"></div></div>
         <div class="row"><span class="lb">底色不透明</span><input type="range" data-k="bgOpacity" min="10" max="100" step="5"><span class="val" data-v="bgOpacity"></span></div>
-        <div class="row"><span class="lb">自定义填充</span><input type="color" data-k="customFill"><span class="hint" style="width:auto">按钮配色选「自定义」时生效</span></div>
-        <div class="row"><span class="lb">按钮描边色</span><input type="color" data-k="strokeColor"><label class="chk"><input type="checkbox" data-k="strokeCustom">覆盖配色描边</label></div>
-        <div class="row"><span class="lb">描边粗细</span><input type="range" data-k="stroke" min="0" max="24" step="1"><span class="val" data-v="stroke"></span></div>
       </div></div>
 
       <div class="card" data-sec="7"><h3>7 · 整图外框（8 种个性边框）</h3><div class="cbody">
